@@ -130,6 +130,7 @@ function startCameraScanner() {
     
     readerDiv.style.display = 'block';
     btnToggleScanner.textContent = "Tutup Kamera Scanner";
+    btnToggleScanner.style.background = "#dc3545"; // Warna merah saat kamera aktif
     isScannerActive = true;
 
     if (!html5QrCode) {
@@ -144,10 +145,8 @@ function startCameraScanner() {
             qrbox: { width: 250, height: 150 }
         },
         (decodedText, decodedResult) => {
-            // Ketika barcode berhasil dibaca kamera
             console.log(`Scan result: ${decodedText}`, decodedResult);
             
-            // Cari barang di master berdasarkan kode yang di-scan
             const scannedCode = decodedText.trim().toLowerCase();
             const matchedItem = masterBarang.find(item => {
                 const kodeItem = (item.kode_barang || item.kode || '').toLowerCase();
@@ -162,11 +161,11 @@ function startCameraScanner() {
             }
         },
         (errorMessage) => {
-            // Scan gagal mendeteksi frame (normal, diabaikan agar tidak spam console)
+            // Frame scan gagal dideteksi (diabaikan)
         }
     ).catch(err => {
         console.error("Gagal membuka kamera:", err);
-        alert("Gagal mengakses kamera HP. Pastikan izin kamera diizinkan (permission allowed).");
+        alert("Gagal mengakses kamera HP. Pastikan izin kamera diizinkan.");
         stopCameraScanner();
     });
 }
@@ -177,7 +176,10 @@ function stopCameraScanner() {
             isScannerActive = false;
             const readerDiv = document.getElementById('reader');
             if (readerDiv) readerDiv.style.display = 'none';
-            if (btnToggleScanner) btnToggleScanner.textContent = "Buka Kamera Scanner";
+            if (btnToggleScanner) {
+                btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
+                btnToggleScanner.style.background = "#28a745"; // Kembalikan ke hijau
+            }
         }).catch(err => {
             console.error("Gagal menghentikan kamera:", err);
         });
@@ -185,7 +187,10 @@ function stopCameraScanner() {
         isScannerActive = false;
         const readerDiv = document.getElementById('reader');
         if (readerDiv) readerDiv.style.display = 'none';
-        if (btnToggleScanner) btnToggleScanner.textContent = "Buka Kamera Scanner";
+        if (btnToggleScanner) {
+            btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
+            btnToggleScanner.style.background = "#28a745";
+        }
     }
 }
 
@@ -220,11 +225,12 @@ if (searchInput) {
     });
 }
 
+// Render daftar barang dengan warna teks kontras & rapi
 function renderList(data) {
     if (!itemList) return;
     itemList.innerHTML = '';
     if (data.length === 0) {
-        itemList.innerHTML = `<div style="padding: 15px; color: #777; text-align: center;">Barang tidak ditemukan</div>`;
+        itemList.innerHTML = `<div style="padding: 15px; color: #777; text-align: center; font-size: 14px;">Barang tidak ditemukan</div>`;
         return;
     }
 
@@ -234,12 +240,12 @@ function renderList(data) {
         const div = document.createElement('div');
         div.className = 'item-pilihan';
         div.style.padding = "12px 10px";
-        div.style.borderBottom = "1px solid #333";
+        div.style.borderBottom = "1px solid #e0e0e0";
         div.style.cursor = "pointer";
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; pointer-events: none;">
-                <span style="font-weight: bold; color: #fff;">[${kodeItem}]</span>
-                <span style="color: #ccc; text-align: right; flex: 1; margin-left: 10px;">${namaItem}</span>
+                <span style="font-weight: bold; color: #007BFF; font-size: 13px;">[${kodeItem}]</span>
+                <span style="color: #333; text-align: right; flex: 1; margin-left: 12px; font-size: 13px; font-weight: 500;">${namaItem}</span>
             </div>
         `;
         
@@ -280,7 +286,7 @@ async function submitPO(e) {
             document.getElementById('poKode').value = '';
             document.getElementById('poNama').value = '';
             document.getElementById('poPic').value = '';
-            if (triggerModal) triggerModal.textContent = "Pilih Barang";
+            if (triggerModal) triggerModal.textContent = "-- Pilih Barang dari Master --";
             setTimeout(() => msg.innerText = "", 4000);
         } else {
             alert("Gagal menyimpan: " + result.message);
