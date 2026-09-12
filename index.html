@@ -3,118 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="Favicon/Logo.png">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <title>Sistem PO Gudang</title>
+    <!-- Library html5-qrcode untuk kamera scanner -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-        .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0 16px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        label { font-weight: bold; font-size: 13px; color: #444; }
-        button { background: #007BFF; color: white; border: none; cursor: pointer; font-weight: bold; }
+        /* CSS Tambahan agar form dan modal rapi dan profesional */
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; }
+        .container { max-width: 500px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #444; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        button { background: #007BFF; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; width: 100%; }
         button:hover { background: #0056b3; }
         .hidden { display: none; }
-        h2 { text-align: center; color: #333; margin-top: 0; }
-        .error { color: red; font-size: 13px; text-align: center; margin-bottom: 10px; }
-        .success { color: green; font-size: 13px; text-align: center; margin-bottom: 10px; }
+        
+        /* Styling Modal Pop-up */
+        #popupSearch {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        #itemListPopup {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .item-pilihan {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .item-pilihan:hover {
+            background: #f1f1f1;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- HALAMAN LOGIN -->
-    <div id="loginSection">
-        <h2>Login Sistem PO</h2>
-        <div id="loginError" class="error"></div>
-        <label>Username</label>
-        <input type="text" id="username" placeholder="Masukkan username" required>
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Masukkan password" required>
-        <button onclick="handleLogin()">Login</button>
-    </div>
-
-    <!-- HALAMAN FORM PO -->
-    <div id="poSection" class="hidden">
-        <h2>Form Purchase Order</h2>
-        <div id="poMessage" class="success"></div>
-        <form id="poForm" onsubmit="submitPO(event)">
-            <label>Tanggal</label>
-            <input type="date" id="poTanggal" required>
-            
-            <!-- 1. Kotak utama yang diklik di form -->
-<div style="margin-bottom: 15px;">
-    <label>Pilih Barang</label>
-    <div id="triggerModal" style="padding: 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; color: #333;">
-        -- Pilih Barang dari Master --
-    </div>
-</div>
-
-<!-- 2. Kerangka Pop-up Pencarian (Awalnya tersembunyi) -->
-<div id="popupSearch" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; justify-content: center; align-items: center;">
-    <div style="background: #1e1e1e; width: 90%; max-width: 450px; border-radius: 8px; padding: 20px; color: #fff;">
-        <div style="font-weight: bold; font-size: 16px; margin-bottom: 12px;">SCAN / Cari Barang</div>
-        <!-- TOMBOL & LAYAR KAMERA SCANNER -->
-        <div style="margin-bottom: 10px; text-align: center;">
-            <button type="button" id="btnToggleScanner" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Buka Kamera Scanner</button>
-            <div id="reader" style="width: 100%; margin-top: 10px; display: none;"></div>
+    <div class="container">
+        <!-- Bagian Login -->
+        <div id="loginSection" class="hidden">
+            <h2>Login Sistem PO</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Masukkan username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Masukkan password">
+            </div>
+            <button type="button" onclick="handleLogin()">Login</button>
+            <div id="loginError" style="color: red; margin-top: 10px; font-size: 13px;"></div>
         </div>
 
-        <!-- Kolom ketik pencarian manual yang sudah ada sebelumnya -->
-        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <input type="text" id="searchInputPopup" placeholder="Ketik nama/kode barang..." style="flex: 1; padding: 8px;">
-            <button type="button" id="clearInputBtn" style="padding: 8px;">X</button>
+        <!-- Bagian Form PO (Setelah Login) -->
+        <div id="poSection" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Form Purchase Order</h2>
+                <button type="button" onclick="handleLogout()" style="width: auto; background: #dc3545; padding: 5px 10px; font-size: 12px;">Logout</button>
+            </div>
+
+            <form id="poForm" onsubmit="submitPO(event)">
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="poTanggal" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Pilih Barang (Klik untuk Cari / Scan)</label>
+                    <button type="button" id="triggerModal" style="background: #e9ecef; color: #333; text-align: left; border: 1px solid #ccc;">-- Pilih Barang dari Master --</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Kode Barang</label>
+                    <input type="text" id="poKode" readonly placeholder="Otomatis terisi" style="background: #e9ecef;">
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Barang</label>
+                    <input type="text" id="poNama" readonly placeholder="Otomatis terisi" style="background: #e9ecef;">
+                </div>
+
+                <div class="form-group">
+                    <label>PIC</label>
+                    <input type="text" id="poPic" readonly placeholder="Otomatis terisi" style="background: #e9ecef;">
+                </div>
+
+                <div class="form-group">
+                    <label>Jumlah</label>
+                    <input type="number" id="poJumlah" required placeholder="Masukkan jumlah barang">
+                </div>
+
+                <button type="submit" id="btnSubmit">Kirim PO</button>
+                <div id="poMessage" style="margin-top: 10px; color: green; font-weight: bold; font-size: 13px; text-align: center;"></div>
+            </form>
         </div>
-
-        <!-- List hasil barang -->
-        <div id="itemListPopup" style="max-height: 250px; overflow-y: auto;"></div>
-
     </div>
-</div>
-        
-        <!-- Kotak Input Pencarian -->
-        <div style="position: relative; margin-bottom: 15px;">
-            <input type="text" id="searchInputPopup" placeholder="Ketik nama barang..." autocomplete="off" style="width: 100%; padding: 10px 35px 10px 12px; background: #2a2a2a; border: 1px solid #00bcd4; border-radius: 4px; color: #fff; font-size: 14px;">
-            <span id="clearInputBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; font-size: 18px;">&times;</span>
+
+    <!-- POP-UP MODAL PENCARIAN & KAMERA SCANNER -->
+    <div id="popupSearch">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 16px;">Cari atau Scan Barang</h3>
+                <button type="button" onclick="document.getElementById('popupSearch').style.display='none'; stopCameraScanner();" style="width: 30px; height: 30px; padding: 0; background: #6c757d;">&times;</button>
+            </div>
+
+            <!-- Tombol & Wadah Kamera Scanner -->
+            <div style="margin-bottom: 15px; text-align: center;">
+                <button type="button" id="btnToggleScanner" style="background: #28a745; margin-bottom: 8px;">📷 Buka Kamera Scanner</button>
+                <div id="reader" style="width: 100%; display: none;"></div>
+            </div>
+
+            <!-- Kolom Ketik Manual -->
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="searchInputPopup" placeholder="Ketik nama atau kode barang...">
+                <button type="button" id="clearInputBtn" style="width: 50px; background: #6c757d;">X</button>
+            </div>
+
+            <!-- Daftar Hasil Barang (1-Click Langsung Pilih) -->
+            <div id="itemListPopup"></div>
         </div>
-
-        <!-- Daftar Pilihan Barang -->
-        <div id="itemListPopup" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; border-top: 1px solid #333;"></div>
-
-        <!-- Tombol Done -->
-        <div style="text-align: right;">
-            <button type="button" id="btnDone" style="background: transparent; border: none; color: #00bcd4; font-weight: bold; font-size: 14px; cursor: pointer; padding: 6px 12px;">Done</button>
-        </div>
     </div>
-</div>
 
-            <label>Kode Barang</label>
-            <input type="text" id="poKode" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
-
-            <label>Nama Barang</label>
-            <input type="text" id="poNama" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
-
-            <label>PIC</label>
-            <input type="text" id="poPic" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
-
-            <label>Jumlah</label>
-            <input type="number" id="poJumlah" min="1" placeholder="Masukkan jumlah" required>
-
-            <button type="submit" id="btnSubmit">Kirim PO</button>
-        </form>
-        <button onclick="handleLogout()" style="background: #dc3545; margin-top: 5px;">Keluar (Logout)</button>
-    </div>
-</div>
-    <div id="popupSearch" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000;">
-    <div style="background: #1e1e1e; padding: 20px; width: 90%; max-width: 400px; border-radius: 8px; display: flex; flex-direction: column; max-height: 80vh;">
-        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="searchInputPopup" placeholder="Cari nama barang..." style="flex: 1; padding: 10px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px;">
-            <button type="button" id="clearInputBtn" style="padding: 0 12px; background: #444; color: #fff; border: none; border-radius: 4px; cursor: pointer;">X</button>
-        </div>
-        <div id="itemListPopup" style="overflow-y: auto; flex: 1; border: 1px solid #333; border-radius: 4px; margin-bottom: 12px; background: #121212;"></div>
-        <button type="button" id="btnDone" style="padding: 10px; background: #00bcd4; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Selesai</button>
-    </div>
-</div>
-<script src="script.js?v=2"></script>
+    <!-- Script Utama (Ditambahkan v=3 untuk menghindari cache) -->
+    <script src="script.js?v=3"></script>
 </body>
 </html>
