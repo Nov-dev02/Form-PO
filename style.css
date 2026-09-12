@@ -1,16 +1,117 @@
-.item-pilihan {
-    display: flex;
+body { 
+    font-family: Arial, sans-serif; 
+    background: #f4f4f9; 
+    margin: 0; 
+    padding: 20px; 
+}
+
+.container { 
+    max-width: 500px; 
+    background: white; 
+    padding: 25px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+    margin: 0 auto; 
+}
+
+.form-group { 
+    margin-bottom: 15px; 
+}
+
+label { 
+    display: block; 
+    font-weight: bold; 
+    margin-bottom: 5px; 
+    color: #444; 
+    font-size: 14px; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 10px; 
+    box-sizing: border-box; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    font-size: 14px; 
+}
+
+button { 
+    background: #007BFF; 
+    color: white; 
+    border: none; 
+    padding: 10px 15px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 14px; 
+    width: 100%; 
+}
+
+button:hover { 
+    background: #0056b3; 
+}
+
+.hidden { 
+    display: none; 
+}
+
+/* Styling Modal Pop-up */
+#popupSearch {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
     align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#itemListPopup {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 10px;
+    background-color: #ffffff;
+}
+
+/* Styling Baris Pilihan Barang (Warna Hitam Pekat & Jelas) */
+.item-pilihan {
     padding: 12px 10px;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid #ccc;
     cursor: pointer;
-    font-size: 13px;
-    color: #ddd;
+    background-color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
 .item-pilihan:hover {
-    background: #2a2a2a;
+    background-color: #f1f1f1 !important;
 }
-.item-pilihan input[type="radio"] {
-    margin-right: 12px;
-    accent-color: #00bcd4;
+
+.item-kode {
+    font-weight: bold !important;
+    color: #000000 !important;
+    font-size: 14px !important;
+}
+
+.item-nama {
+    color: #000000 !important;
+    text-align: right;
+    flex: 1;
+    margin-left: 12px;
+    font-size: 14px !important;
+    font-weight: bold !important;
 }

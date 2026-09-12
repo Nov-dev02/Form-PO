@@ -5,7 +5,6 @@ let selectedItemData = null;
 let html5QrCode = null;
 let isScannerActive = false;
 
-// Cek sesi login & aturan wajib login sehari sekali setiap halaman dibuka
 window.onload = function() {
     if (document.getElementById('poTanggal')) {
         document.getElementById('poTanggal').valueAsDate = new Date();
@@ -71,7 +70,6 @@ async function handleLogin() {
     }
 }
 
-// Ambil data master barang dari Google Sheets
 async function loadMasterBarang() {
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -87,7 +85,6 @@ async function loadMasterBarang() {
     }
 }
 
-// Inisialisasi elemen Pop-up Search & Kamera
 const triggerModal = document.getElementById('triggerModal');
 const popupSearch = document.getElementById('popupSearch');
 const searchInput = document.getElementById('searchInputPopup');
@@ -113,7 +110,6 @@ if (clearBtn) {
     });
 }
 
-// Tombol untuk Buka/Tutup Kamera Scanner HP
 if (btnToggleScanner) {
     btnToggleScanner.addEventListener('click', function() {
         if (!isScannerActive) {
@@ -130,14 +126,13 @@ function startCameraScanner() {
     
     readerDiv.style.display = 'block';
     btnToggleScanner.textContent = "Tutup Kamera Scanner";
-    btnToggleScanner.style.background = "#dc3545"; // Warna merah saat kamera aktif
+    btnToggleScanner.style.background = "#dc3545";
     isScannerActive = true;
 
     if (!html5QrCode) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Mulai kamera menghadap belakang (environment)
     html5QrCode.start(
         { facingMode: "environment" },
         {
@@ -145,8 +140,6 @@ function startCameraScanner() {
             qrbox: { width: 250, height: 150 }
         },
         (decodedText, decodedResult) => {
-            console.log(`Scan result: ${decodedText}`, decodedResult);
-            
             const scannedCode = decodedText.trim().toLowerCase();
             const matchedItem = masterBarang.find(item => {
                 const kodeItem = (item.kode_barang || item.kode || '').toLowerCase();
@@ -160,9 +153,7 @@ function startCameraScanner() {
                 alert(`Barcode "${decodedText}" tidak ditemukan di database Master Barang!`);
             }
         },
-        (errorMessage) => {
-            // Frame scan gagal dideteksi (diabaikan)
-        }
+        (errorMessage) => {}
     ).catch(err => {
         console.error("Gagal membuka kamera:", err);
         alert("Gagal mengakses kamera HP. Pastikan izin kamera diizinkan.");
@@ -178,7 +169,7 @@ function stopCameraScanner() {
             if (readerDiv) readerDiv.style.display = 'none';
             if (btnToggleScanner) {
                 btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
-                btnToggleScanner.style.background = "#28a745"; // Kembalikan ke hijau
+                btnToggleScanner.style.background = "#28a745";
             }
         }).catch(err => {
             console.error("Gagal menghentikan kamera:", err);
@@ -194,7 +185,6 @@ function stopCameraScanner() {
     }
 }
 
-// Fungsi pilih barang dan langsung masukkan ke form PO
 function pilihBarang(item) {
     selectedItemData = item;
     const namaVal = item.nama_barang || item.nama || '';
@@ -212,7 +202,6 @@ function pilihBarang(item) {
     if (searchInput) searchInput.value = '';
 }
 
-// Filter pencarian teks biasa lewat keyboard
 if (searchInput) {
     searchInput.addEventListener('input', function() {
         const keyword = this.value.toLowerCase().trim();
@@ -225,28 +214,24 @@ if (searchInput) {
     });
 }
 
-// Render daftar barang dengan warna teks kontras & rapi
+// Render daftar barang menggunakan class CSS
 function renderList(data) {
     if (!itemList) return;
     itemList.innerHTML = '';
     if (data.length === 0) {
-        itemList.innerHTML = `<div style="padding: 15px; color: #777; text-align: center; font-size: 14px;">Barang tidak ditemukan</div>`;
+        itemList.innerHTML = `<div style="padding: 15px; color: #000000; text-align: center; font-size: 14px; font-weight: bold;">Barang tidak ditemukan</div>`;
         return;
     }
 
     data.forEach(item => {
         const namaItem = item.nama_barang || item.nama || 'Tanpa Nama';
         const kodeItem = item.kode_barang || item.kode || '';
+        
         const div = document.createElement('div');
         div.className = 'item-pilihan';
-        div.style.padding = "12px 10px";
-        div.style.borderBottom = "1px solid #e0e0e0";
-        div.style.cursor = "pointer";
         div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; pointer-events: none;">
-                <span style="font-weight: bold; color: #007BFF; font-size: 13px;">[${kodeItem}]</span>
-                <span style="color: #333; text-align: right; flex: 1; margin-left: 12px; font-size: 13px; font-weight: 500;">${namaItem}</span>
-            </div>
+            <span class="item-kode">[${kodeItem}]</span>
+            <span class="item-nama">${namaItem}</span>
         `;
         
         div.addEventListener('click', function() {
