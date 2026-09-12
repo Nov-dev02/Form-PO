@@ -2,6 +2,8 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxte5kTB8H88pQ2DKUp
 
 let masterBarang = [];
 let selectedItemData = null;
+let html5QrCode = null;
+let isScannerActive = false;
 
 // Cek sesi login & aturan wajib login sehari sekali setiap halaman dibuka
 window.onload = function() {
@@ -85,13 +87,13 @@ async function loadMasterBarang() {
     }
 }
 
-// Inisialisasi elemen Pop-up Search
+// Inisialisasi elemen Pop-up Search & Kamera
 const triggerModal = document.getElementById('triggerModal');
 const popupSearch = document.getElementById('popupSearch');
 const searchInput = document.getElementById('searchInputPopup');
 const itemList = document.getElementById('itemListPopup');
 const clearBtn = document.getElementById('clearInputBtn');
-const btnDone = document.getElementById('btnDone');
+const btnToggleScanner = document.getElementById('btnToggleScanner');
 
 if (triggerModal) {
     triggerModal.addEventListener('click', function() {
@@ -102,34 +104,113 @@ if (triggerModal) {
     });
 }
 
-if (btnDone) {
-    btnDone.addEventListener('click', function() {
-        popupSearch.style.display = 'none';
-        if (selectedItemData) {
-            const namaVal = selectedItemData.nama_barang || selectedItemData.nama || '';
-            const kodeVal = selectedItemData.kode_barang || selectedItemData.kode || '';
-            const picVal = selectedItemData.pic || '';
-
-            if (triggerModal) triggerModal.textContent = namaVal;
-            
-            if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
-            if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
-            if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
-        }
-    });
-}
-
 if (clearBtn) {
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
         renderList(masterBarang);
+        stopCameraScanner();
         searchInput.focus();
     });
 }
 
+// Tombol untuk Buka/Tutup Kamera Scanner HP
+if (btnToggleScanner) {
+    btnToggleScanner.addEventListener('click', function() {
+        if (!isScannerActive) {
+            startCameraScanner();
+        } else {
+            stopCameraScanner();
+        }
+    });
+}
+
+function startCameraScanner() {
+    const readerDiv = document.getElementById('reader');
+    if (!readerDiv) return;
+    
+    readerDiv.style.display = 'block';
+    btnToggleScanner.textContent = "Tutup Kamera Scanner";
+    isScannerActive = true;
+
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+    }
+
+    // Mulai kamera menghadap belakang (environment)
+    html5QrCode.start(
+        { facingMode: "environment" },
+        {
+            fps: 10,
+            qrbox: { width: 250, height: 150 }
+        },
+        (decodedText, decodedResult) => {
+            // Ketika barcode berhasil dibaca kamera
+            console.log(`Scan result: ${decodedText}`, decodedResult);
+            
+            // Cari barang di master berdasarkan kode yang di-scan
+            const scannedCode = decodedText.trim().toLowerCase();
+            const matchedItem = masterBarang.find(item => {
+                const kodeItem = (item.kode_barang || item.kode || '').toLowerCase();
+                return kodeItem === scannedCode || kodeItem.includes(scannedCode);
+            });
+
+            if (matchedItem) {
+                stopCameraScanner();
+                pilihBarang(matchedItem);
+            } else {
+                alert(`Barcode "${decodedText}" tidak ditemukan di database Master Barang!`);
+            }
+        },
+        (errorMessage) => {
+            // Scan gagal mendeteksi frame (normal, diabaikan agar tidak spam console)
+        }
+    ).catch(err => {
+        console.error("Gagal membuka kamera:", err);
+        alert("Gagal mengakses kamera HP. Pastikan izin kamera diizinkan (permission allowed).");
+        stopCameraScanner();
+    });
+}
+
+function stopCameraScanner() {
+    if (html5QrCode && isScannerActive) {
+        html5QrCode.stop().then(() => {
+            isScannerActive = false;
+            const readerDiv = document.getElementById('reader');
+            if (readerDiv) readerDiv.style.display = 'none';
+            if (btnToggleScanner) btnToggleScanner.textContent = "Buka Kamera Scanner";
+        }).catch(err => {
+            console.error("Gagal menghentikan kamera:", err);
+        });
+    } else {
+        isScannerActive = false;
+        const readerDiv = document.getElementById('reader');
+        if (readerDiv) readerDiv.style.display = 'none';
+        if (btnToggleScanner) btnToggleScanner.textContent = "Buka Kamera Scanner";
+    }
+}
+
+// Fungsi pilih barang dan langsung masukkan ke form PO
+function pilihBarang(item) {
+    selectedItemData = item;
+    const namaVal = item.nama_barang || item.nama || '';
+    const kodeVal = item.kode_barang || item.kode || '';
+    const picVal = item.pic || '';
+
+    if (triggerModal) triggerModal.textContent = namaVal;
+    
+    if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
+    if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
+    if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
+
+    stopCameraScanner();
+    popupSearch.style.display = 'none';
+    if (searchInput) searchInput.value = '';
+}
+
+// Filter pencarian teks biasa lewat keyboard
 if (searchInput) {
     searchInput.addEventListener('input', function() {
-        const keyword = this.value.toLowerCase();
+        const keyword = this.value.toLowerCase().trim();
         const filtered = masterBarang.filter(item => {
             const namaItem = item.nama_barang || item.nama || '';
             const kodeItem = item.kode_barang || item.kode || '';
@@ -152,20 +233,18 @@ function renderList(data) {
         const kodeItem = item.kode_barang || item.kode || '';
         const div = document.createElement('div');
         div.className = 'item-pilihan';
-        div.style.padding = "10px";
+        div.style.padding = "12px 10px";
         div.style.borderBottom = "1px solid #333";
         div.style.cursor = "pointer";
         div.innerHTML = `
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <input type="radio" name="pilihanBarang" ${selectedItemData && (selectedItemData.kode === kodeItem || selectedItemData.kode_barang === kodeItem) ? 'checked' : ''}>
-                <span>[${kodeItem}] ${namaItem}</span>
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; pointer-events: none;">
+                <span style="font-weight: bold; color: #fff;">[${kodeItem}]</span>
+                <span style="color: #ccc; text-align: right; flex: 1; margin-left: 10px;">${namaItem}</span>
+            </div>
         `;
         
         div.addEventListener('click', function() {
-            const radio = div.querySelector('input[type="radio"]');
-            radio.checked = true;
-            selectedItemData = item;
+            pilihBarang(item);
         });
 
         itemList.appendChild(div);
