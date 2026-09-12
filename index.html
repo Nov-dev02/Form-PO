@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="Favicon/Logo.png">
+    <link rel="stylesheet" href="style.css">
     <title>Sistem PO Gudang</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
@@ -40,10 +41,34 @@
             <label>Tanggal</label>
             <input type="date" id="poTanggal" required>
             
-            <label>Pilih Barang</label>
-            <select id="selectBarang" onchange="isiOtomatisBarang()" required>
-                <option value="">-- Pilih Barang dari Master --</option>
-            </select>
+            <!-- 1. Kotak utama yang diklik di form -->
+<div style="margin-bottom: 15px;">
+    <label>Pilih Barang</label>
+    <div id="triggerModal" style="padding: 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; color: #333;">
+        -- Pilih Barang dari Master --
+    </div>
+</div>
+
+<!-- 2. Kerangka Pop-up Pencarian (Awalnya tersembunyi) -->
+<div id="popupSearch" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; justify-content: center; align-items: center;">
+    <div style="background: #1e1e1e; width: 90%; max-width: 450px; border-radius: 8px; padding: 20px; color: #fff;">
+        <div style="font-weight: bold; font-size: 16px; margin-bottom: 12px;">SCAN / Cari Barang</div>
+        
+        <!-- Kotak Input Pencarian -->
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="searchInputPopup" placeholder="Ketik nama barang..." autocomplete="off" style="width: 100%; padding: 10px 35px 10px 12px; background: #2a2a2a; border: 1px solid #00bcd4; border-radius: 4px; color: #fff; font-size: 14px;">
+            <span id="clearInputBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; font-size: 18px;">&times;</span>
+        </div>
+
+        <!-- Daftar Pilihan Barang -->
+        <div id="itemListPopup" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; border-top: 1px solid #333;"></div>
+
+        <!-- Tombol Done -->
+        <div style="text-align: right;">
+            <button type="button" id="btnDone" style="background: transparent; border: none; color: #00bcd4; font-weight: bold; font-size: 14px; cursor: pointer; padding: 6px 12px;">Done</button>
+        </div>
+    </div>
+</div>
 
             <label>Kode Barang</label>
             <input type="text" id="poKode" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
