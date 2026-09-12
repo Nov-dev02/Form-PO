@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem PO Gudang</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0 16px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        label { font-weight: bold; font-size: 13px; color: #444; }
+        button { background: #007BFF; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .error { color: red; font-size: 13px; text-align: center; margin-bottom: 10px; }
+        .success { color: green; font-size: 13px; text-align: center; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HALAMAN LOGIN -->
+    <div id="loginSection">
+        <h2>Login Sistem PO</h2>
+        <div id="loginError" class="error"></div>
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Masukkan username" required>
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Masukkan password" required>
+        <button onclick="handleLogin()">Login</button>
+    </div>
+
+    <!-- HALAMAN FORM PO -->
+    <div id="poSection" class="hidden">
+        <h2>Form Purchase Order</h2>
+        <div id="poMessage" class="success"></div>
+        <form id="poForm" onsubmit="submitPO(event)">
+            <label>Tanggal</label>
+            <input type="date" id="poTanggal" required>
+            
+            <label>Pilih Barang</label>
+            <select id="selectBarang" onchange="isiOtomatisBarang()" required>
+                <option value="">-- Pilih Barang dari Master --</option>
+            </select>
+
+            <label>Kode Barang</label>
+            <input type="text" id="poKode" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
+
+            <label>Nama Barang</label>
+            <input type="text" id="poNama" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
+
+            <label>PIC</label>
+            <input type="text" id="poPic" readonly style="background: #e9ecef;" placeholder="Otomatis terisi">
+
+            <label>Jumlah</label>
+            <input type="number" id="poJumlah" min="1" placeholder="Masukkan jumlah" required>
+
+            <button type="submit" id="btnSubmit">Kirim PO</button>
+        </form>
+        <button onclick="handleLogout()" style="background: #dc3545; margin-top: 5px;">Keluar (Logout)</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // PASTE LINK /EXEC GOOGLE APPS SCRIPT ANDA DI BAWAH INI
+    // ==========================================
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxte5kTB8H88pQ2DKUp4CE0mrnu_3egJhvfApOuERvUOrLKKGrumrf0IVvhRlCpEJktNQ/exec";
+
+    let masterBarang = [];
+
+    // Cek sesi login & aturan wajib login sehari sekali setiap halaman dibuka
+    window.onload = function() {
+        document.getElementById('poTanggal').valueAsDate = new Date();
+
+        const savedUser = localStorage.getItem('po_user');
+        const loginDate = localStorage.getItem('po_login_date');
+        const today = new Date().toISOString().split('T')[0];
+
+        // Validasi: Harus ada user tersimpan DAN tanggal login harus hari ini
+        if (savedUser && loginDate === today) {
+            tampilkanFormPO();
+        } else {
+            // Jika sudah beda hari atau belum login, bersihkan sesi dan lempar ke login
+            localStorage.clear();
+            tampilkanLogin();
+        }
+    };
+
+    function tampilkanLogin() {
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('poSection').classList.add('hidden');
+    }
+
+    function tampilkanFormPO() {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('poSection').classList.remove('hidden');
+        loadDataBarang();
+    }
+
+    async function handleLogin() {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+        const errDiv = document.getElementById('loginError');
+
+        if (!user || !pass) {
+            errDiv.innerText = "Username dan password wajib diisi!";
+            return;
+        }
+
+        errDiv.innerText = "Memverifikasi...";
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', username: user, password: pass })
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                const today = new Date().toISOString().split('T')[0];
+                localStorage.setItem('po_user', user);
+                localStorage.setItem('po_login_date', today);
+                tampilkanFormPO();
+            } else {
+                errDiv.innerText = result.message;
+            }
+        } catch (err) {
+            errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+            console.error(err);
+        }
+    }
+
+    async function loadDataBarang() {
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getBarang' })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                masterBarang = result.data;
+                const select = document.getElementById('selectBarang');
+                select.innerHTML = '<option value="">-- Pilih Barang dari Master --</option>';
+                masterBarang.forEach(item => {
+                    let opt = document.createElement('option');
+                    opt.value = item.kode;
+                    opt.text = `${item.kode} - ${item.nama}`;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data barang", err);
+        }
+    }
+
+    function isiOtomatisBarang() {
+        const kodePilihan = document.getElementById('selectBarang').value;
+        const barang = masterBarang.find(b => b.kode === kodePilihan);
+        if (barang) {
+            document.getElementById('poKode').value = barang.kode;
+            document.getElementById('poNama').value = barang.nama;
+            document.getElementById('poPic').value = barang.pic;
+        } else {
+            document.getElementById('poKode').value = '';
+            document.getElementById('poNama').value = '';
+            document.getElementById('poPic').value = '';
+        }
+    }
+
+    async function submitPO(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const msg = document.getElementById('poMessage');
+        btn.innerText = "Mengirim...";
+        btn.disabled = true;
+
+        const dataPO = {
+            action: 'submitPO',
+            tanggal: document.getElementById('poTanggal').value,
+            kodeBarang: document.getElementById('poKode').value,
+            namaBarang: document.getElementById('poNama').value,
+            pic: document.getElementById('poPic').value,
+            jumlah: document.getElementById('poJumlah').value
+        };
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(dataPO)
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
+                document.getElementById('poForm').reset();
+                document.getElementById('poTanggal').valueAsDate = new Date();
+                document.getElementById('poKode').value = '';
+                document.getElementById('poNama').value = '';
+                document.getElementById('poPic').value = '';
+                setTimeout(() => msg.innerText = "", 4000);
+            } else {
+                alert("Gagal menyimpan: " + result.message);
+            }
+        } catch (err) {
+            alert("Terjadi kesalahan koneksi saat kirim PO!");
+            console.error(err);
+        } finally {
+            btn.innerText = "Kirim PO";
+            btn.disabled = false;
+        }
+    }
+
+    function handleLogout() {
+        localStorage.clear();
+        tampilkanLogin();
+    }
+</script>
+</body>
+</html>
