@@ -5,14 +5,23 @@ let selectedItemData = null;
 let html5QrCode = null;
 let isScannerActive = false;
 
+// Fungsi helper untuk mendapatkan tanggal lokal format YYYY-MM-DD
+function getLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 window.onload = function() {
+    const today = getLocalDateString();
     if (document.getElementById('poTanggal')) {
-        document.getElementById('poTanggal').valueAsDate = new Date();
+        document.getElementById('poTanggal').value = today;
     }
 
     const savedUser = localStorage.getItem('po_user');
     const loginDate = localStorage.getItem('po_login_date');
-    const today = new Date().toISOString().split('T')[0];
 
     if (savedUser && loginDate === today) {
         tampilkanFormPO();
@@ -57,7 +66,7 @@ async function handleLogin() {
         const result = await response.json();
 
         if (result.status === 'success') {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
             tampilkanFormPO();
@@ -214,7 +223,6 @@ if (searchInput) {
     });
 }
 
-// Render daftar barang menggunakan class CSS
 function renderList(data) {
     if (!itemList) return;
     itemList.innerHTML = '';
@@ -267,7 +275,7 @@ async function submitPO(e) {
         if (result.status === 'success') {
             msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
             document.getElementById('poForm').reset();
-            document.getElementById('poTanggal').valueAsDate = new Date();
+            document.getElementById('poTanggal').value = getLocalDateString();
             document.getElementById('poKode').value = '';
             document.getElementById('poNama').value = '';
             document.getElementById('poPic').value = '';
