@@ -29,6 +29,9 @@ window.onload = function() {
         localStorage.clear();
         tampilkanLogin();
     }
+
+    // Inisialisasi Event Listener Animasi Robot
+    initRobotAnimation();
 };
 
 function tampilkanLogin() {
@@ -98,7 +101,7 @@ const triggerModal = document.getElementById('triggerModal');
 const popupSearch = document.getElementById('popupSearch');
 const searchInput = document.getElementById('searchInputPopup');
 const itemList = document.getElementById('itemListPopup');
-const clearBtn = document.getElementById('clearInputBtn');
+const btnCloseModal = document.getElementById('btnCloseModal');
 const btnToggleScanner = document.getElementById('btnToggleScanner');
 
 if (triggerModal) {
@@ -110,12 +113,21 @@ if (triggerModal) {
     });
 }
 
-if (clearBtn) {
-    clearBtn.addEventListener('click', function() {
+if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', function() {
+        popupSearch.style.display = 'none';
         searchInput.value = '';
         renderList(masterBarang);
         stopCameraScanner();
-        searchInput.focus();
+    });
+}
+
+if (popupSearch) {
+    popupSearch.addEventListener('click', function(e) {
+        if (e.target === popupSearch) {
+            popupSearch.style.display = 'none';
+            stopCameraScanner();
+        }
     });
 }
 
@@ -290,6 +302,46 @@ async function submitPO(e) {
     } finally {
         btn.innerText = "Kirim PO";
         btn.disabled = false;
+    }
+}
+
+// Logika Animasi Robot (Fokus/Blur Password)
+function initRobotAnimation() {
+    const passwordInput = document.getElementById('password');
+    const robotContainer = document.getElementById('robotContainer');
+
+    if (passwordInput && robotContainer) {
+        passwordInput.addEventListener('focus', function() {
+            robotContainer.classList.add('cover-eyes');
+        });
+
+        passwordInput.addEventListener('blur', function() {
+            robotContainer.classList.remove('cover-eyes');
+        });
+    }
+}
+
+// Fungsi Global Toggle Password (Buka/Tutup Mata) yang dipanggil via onclick HTML
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    
+    if (!passwordInput || !togglePassword) return;
+
+    // SVG Mata Terbuka (Melek)
+    const eyeOpenSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    
+    // SVG Mata Tertutup (Merem)
+    const eyeClosedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c3 5 7 7 10 7s7-2 10-7"></path></svg>`;
+
+    const isPassword = passwordInput.getAttribute('type') === 'password';
+    
+    if (isPassword) {
+        passwordInput.setAttribute('type', 'text');
+        togglePassword.innerHTML = eyeOpenSvg;
+    } else {
+        passwordInput.setAttribute('type', 'password');
+        togglePassword.innerHTML = eyeClosedSvg;
     }
 }
 

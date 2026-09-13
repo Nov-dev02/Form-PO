@@ -1,117 +1,350 @@
-body { 
-    font-family: Arial, sans-serif; 
-    background: #f4f4f9; 
-    margin: 0; 
-    padding: 20px; 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.container { 
-    max-width: 500px; 
-    background: white; 
-    padding: 25px; 
-    border-radius: 8px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-    margin: 0 auto; 
+body {
+    background-color: #0b0f19;
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
 }
 
-.form-group { 
-    margin-bottom: 15px; 
+.container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
 }
 
-label { 
-    display: block; 
-    font-weight: bold; 
-    margin-bottom: 5px; 
-    color: #444; 
-    font-size: 14px; 
+.hidden {
+    display: none !important;
 }
 
-input, select { 
-    width: 100%; 
-    padding: 10px; 
-    box-sizing: border-box; 
-    border: 1px solid #ccc; 
-    border-radius: 4px; 
-    font-size: 14px; 
+.login-box, #poSection {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    width: 100%;
 }
 
-button { 
-    background: #007BFF; 
-    color: white; 
-    border: none; 
-    padding: 10px 15px; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    font-size: 14px; 
-    width: 100%; 
+/* Robot Animation Styles */
+.robot-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
-button:hover { 
-    background: #0056b3; 
+.robot-svg .robot-hand {
+    transition: transform 0.3s ease;
 }
 
-.hidden { 
-    display: none; 
+.robot-container.cover-eyes .left-hand {
+    transform: translate(22px, 32px) rotate(-15deg);
 }
 
-/* Styling Modal Pop-up */
-#popupSearch {
-    display: none;
+.robot-container.cover-eyes .right-hand {
+    transform: translate(-22px, 32px) rotate(15deg);
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #f8fafc;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+/* Styling Universal untuk Semua Jenis Input Form */
+input[type="text"],
+input[type="date"],
+input[type="number"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus {
+    border-color: #38bdf8;
+}
+
+/* Input dengan ikon khusus (Username & Password) */
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-with-icon .input-icon {
+    position: absolute;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.input-with-icon input {
+    padding-left: 45px;
+    padding-right: 45px;
+}
+
+/* Eye Icon Styling */
+.input-with-icon .eye-icon {
+    position: absolute;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    z-index: 10; 
+    color: #94a3b8;
+    padding: 4px;
+    transition: color 0.2s ease;
+}
+
+.input-with-icon .eye-icon svg {
+    pointer-events: none;
+}
+
+.input-with-icon .eye-icon:hover {
+    color: #38bdf8;
+}
+
+/* Buttons */
+button {
+    width: 100%;
+    padding: 12px;
+    background: #38bdf8;
+    color: #0b0f19;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+}
+
+button:hover {
+    background: #0ea5e9;
+}
+
+.error-msg {
+    color: #ef4444;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.success-msg {
+    color: #22c55e;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* PO Section Styles */
+.header-po {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-logout {
+    width: auto;
+    padding: 6px 12px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 13px;
+    margin-top: 0;
+}
+
+.btn-logout:hover {
+    background: #dc2626;
+}
+
+.scanner-section {
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.scanner-section p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.btn-scanner {
+    background: #22c55e;
+    color: #fff;
+    margin-top: 0;
+}
+
+.btn-scanner:hover {
+    background: #16a34a;
+}
+
+.btn-modal-trigger {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-weight: normal;
+    cursor: pointer;
+    margin-top: 0;
+    width: 100%;
+}
+
+.btn-modal-trigger:hover {
+    border-color: #38bdf8;
+    background: #1e293b;
+}
+
+input[readonly] {
+    background: #0f172a !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+}
+
+/* Modal Styling */
+.modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
 
 .modal-content {
-    background: #fff;
-    padding: 20px;
+    background: #1e293b;
+    border: 1px solid #334155;
     width: 90%;
     max-width: 400px;
-    border-radius: 8px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
-#itemListPopup {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-top: 10px;
-    background-color: #ffffff;
-}
-
-/* Styling Baris Pilihan Barang (Warna Hitam Pekat & Jelas) */
-.item-pilihan {
-    padding: 12px 10px;
-    border-bottom: 1px solid #ccc;
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
     cursor: pointer;
-    background-color: #ffffff !important;
+    width: auto;
+    padding: 0;
+    margin: 0;
+}
+
+.btn-close-modal:hover {
+    color: #fff;
+}
+
+.search-input-modal {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.search-input-modal:focus {
+    border-color: #38bdf8;
+}
+
+.item-list-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    background: #0f172a;
+}
+
+.item-pilihan {
+    padding: 10px 12px;
+    border-bottom: 1px solid #1e293b;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background 0.2s;
 }
 
 .item-pilihan:hover {
-    background-color: #f1f1f1 !important;
+    background: #1e293b;
 }
 
 .item-kode {
-    font-weight: bold !important;
-    color: #000000 !important;
-    font-size: 14px !important;
+    font-size: 12px;
+    color: #38bdf8;
+    font-weight: bold;
 }
 
 .item-nama {
-    color: #000000 !important;
+    font-size: 13px;
+    color: #f8fafc;
     text-align: right;
     flex: 1;
-    margin-left: 12px;
-    font-size: 14px !important;
-    font-weight: bold !important;
+    margin-left: 10px;
+}
+
+/* Footer */
+.footer-app {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
 }
