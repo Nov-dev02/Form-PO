@@ -5,7 +5,6 @@ let selectedItemData = null;
 let html5QrCode = null;
 let isScannerActive = false;
 
-// Fungsi helper untuk mendapatkan tanggal lokal format YYYY-MM-DD
 function getLocalDateString() {
     const now = new Date();
     const year = now.getFullYear();
@@ -30,7 +29,6 @@ window.onload = function() {
         tampilkanLogin();
     }
 
-    // Inisialisasi Event Listener Animasi Robot
     initRobotAnimation();
 };
 
@@ -305,33 +303,50 @@ async function submitPO(e) {
     }
 }
 
-// Logika Animasi Robot (Fokus/Blur Password)
 function initRobotAnimation() {
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const robotContainer = document.getElementById('robotContainer');
+    const robotBubble = document.getElementById('robotBubble');
 
-    if (passwordInput && robotContainer) {
+    if (usernameInput && passwordInput && robotContainer && robotBubble) {
+        usernameInput.addEventListener('focus', function() {
+            robotContainer.classList.remove('password-active');
+            robotBubble.textContent = "Halo! Masukkan username kamu ya 👤";
+        });
+
         passwordInput.addEventListener('focus', function() {
-            robotContainer.classList.add('cover-eyes');
+            robotContainer.classList.add('password-active');
+            robotBubble.textContent = "Waduh, password rahasia! Aku tutup mata ya 🙈";
+        });
+
+        usernameInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (document.activeElement !== passwordInput && document.activeElement !== usernameInput) {
+                    robotContainer.classList.remove('password-active');
+                    robotBubble.textContent = "Masukkan akun internal gudang";
+                }
+            }, 100);
         });
 
         passwordInput.addEventListener('blur', function() {
-            robotContainer.classList.remove('cover-eyes');
+            setTimeout(() => {
+                if (document.activeElement !== passwordInput && document.activeElement !== usernameInput) {
+                    robotContainer.classList.remove('password-active');
+                    robotBubble.textContent = "Masukkan akun internal gudang";
+                }
+            }, 100);
         });
     }
 }
 
-// Fungsi Global Toggle Password (Buka/Tutup Mata) yang dipanggil via onclick HTML
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
     
     if (!passwordInput || !togglePassword) return;
 
-    // SVG Mata Terbuka (Melek)
     const eyeOpenSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-    
-    // SVG Mata Tertutup (Merem)
     const eyeClosedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c3 5 7 7 10 7s7-2 10-7"></path></svg>`;
 
     const isPassword = passwordInput.getAttribute('type') === 'password';
