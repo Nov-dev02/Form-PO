@@ -15,9 +15,8 @@ function getLocalDateString() {
 
 window.onload = function() {
     const today = getLocalDateString();
-    if (document.getElementById('poTanggal')) {
-        document.getElementById('poTanggal').value = today;
-    }
+    const poTanggal = document.getElementById('poTanggal');
+    if (poTanggal) poTanggal.value = today;
 
     const savedUser = localStorage.getItem('po_user');
     const loginDate = localStorage.getItem('po_login_date');
@@ -30,6 +29,7 @@ window.onload = function() {
     }
 
     initRobotAnimation();
+    initEventListeners();
 };
 
 function tampilkanLogin() {
@@ -48,16 +48,19 @@ function tampilkanFormPO() {
 }
 
 async function handleLogin() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
     const errDiv = document.getElementById('loginError');
 
+    const user = usernameInput ? usernameInput.value.trim() : '';
+    const pass = passwordInput ? passwordInput.value.trim() : '';
+
     if (!user || !pass) {
-        errDiv.innerText = "Username dan password wajib diisi!";
+        if (errDiv) errDiv.innerText = "Username dan password wajib diisi!";
         return;
     }
 
-    errDiv.innerText = "Memverifikasi...";
+    if (errDiv) errDiv.innerText = "Memverifikasi...";
 
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -72,10 +75,10 @@ async function handleLogin() {
             localStorage.setItem('po_login_date', today);
             tampilkanFormPO();
         } else {
-            errDiv.innerText = result.message;
+            if (errDiv) errDiv.innerText = result.message;
         }
     } catch (err) {
-        errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+        if (errDiv) errDiv.innerText = "Gagal terhubung ke server Apps Script!";
         console.error(err);
     }
 }
@@ -89,70 +92,98 @@ async function loadMasterBarang() {
         const result = await response.json();
         if (result.status === 'success') {
             masterBarang = result.data;
+            console.log("Data Master Barang Berhasil Dimuat:", masterBarang);
+        } else {
+            console.warn("Gagal load master barang dari server:", result.message);
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
     }
 }
 
-const triggerModal = document.getElementById('triggerModal');
-const popupSearch = document.getElementById('popupSearch');
-const searchInput = document.getElementById('searchInputPopup');
-const itemList = document.getElementById('itemListPopup');
-const btnCloseModal = document.getElementById('btnCloseModal');
-const btnToggleScanner = document.getElementById('btnToggleScanner');
+function initEventListeners() {
+    const triggerModal = document.getElementById('triggerModal');
+    const popupSearch = document.getElementById('popupSearch');
+    const searchInput = document.getElementById('searchInputPopup');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
 
-if (triggerModal) {
-    triggerModal.addEventListener('click', function() {
-        popupSearch.style.display = 'flex';
-        searchInput.value = '';
-        renderList(masterBarang);
-        searchInput.focus();
-    });
-}
+    if (triggerModal) {
+        triggerModal.addEventListener('click', function() {
+            if (popupSearch) popupSearch.style.display = 'flex';
+            if (searchInput) searchInput.value = '';
+            renderList(masterBarang);
+            if (searchInput) searchInput.focus();
+        });
+    }
 
-if (btnCloseModal) {
-    btnCloseModal.addEventListener('click', function() {
-        popupSearch.style.display = 'none';
-        searchInput.value = '';
-        renderList(masterBarang);
-        stopCameraScanner();
-    });
-}
-
-if (popupSearch) {
-    popupSearch.addEventListener('click', function(e) {
-        if (e.target === popupSearch) {
-            popupSearch.style.display = 'none';
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', function() {
+            if (popupSearch) popupSearch.style.display = 'none';
+            if (searchInput) searchInput.value = '';
+            renderList(masterBarang);
             stopCameraScanner();
-        }
-    });
+        });
+    }
+
+    if (popupSearch) {
+        popupSearch.addEventListener('click', function(e) {
+            if (e.target === popupSearch) {
+                popupSearch.style.display = 'none';
+                stopCameraScanner();
+            }
+        });
+    }
+
+    if (btnToggleScanner) {
+        btnToggleScanner.addEventListener('click', function() {
+            if (!isScannerActive) {
+                startCameraScanner();
+            } else {
+                stopCameraScanner();
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.toLowerCase().trim();
+            const filtered = masterBarang.filter(item => {
+                const namaItem = item.nama_barang || item.nama || '';
+                const kodeItem = item.kode_barang || item.kode || '';
+                return namaItem.toLowerCase().includes(keyword) || kodeItem.toLowerCase().includes(keyword);
+            });
+            renderList(filtered);
+        });
+    }
 }
 
-if (btnToggleScanner) {
-    btnToggleScanner.addEventListener('click', function() {
-        if (!isScannerActive) {
-            startCameraScanner();
-        } else {
-            stopCameraScanner();
-        }
-    });
-}
-
-function startCameraScanner() {
+async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
     if (!readerDiv) return;
+
+    if (masterBarang.length === 0) {
+        if (btnToggleScanner) btnToggleScanner.textContent = "Memuat Database...";
+        await loadMasterBarang();
+        if (masterBarang.length === 0) {
+            alert("Database Master Barang kosong atau gagal dimuat! Periksa koneksi internet Anda.");
+            if (btnToggleScanner) btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
+            return;
+        }
+    }
     
     readerDiv.style.display = 'block';
-    btnToggleScanner.textContent = "Tutup Kamera Scanner";
-    btnToggleScanner.style.background = "#dc3545";
+    if (btnToggleScanner) {
+        btnToggleScanner.textContent = "Tutup Kamera Scanner";
+        btnToggleScanner.style.background = "#dc3545";
+    }
     isScannerActive = true;
 
     if (!html5QrCode) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Ditingkatkan resolusi & FPS-nya agar super responsif membaca QR botol kecil
     html5QrCode.start(
         { facingMode: "environment" },
         {
@@ -167,9 +198,11 @@ function startCameraScanner() {
         },
         (decodedText, decodedResult) => {
             const scannedCode = decodedText.trim().toLowerCase();
+            console.log("QR Code Terbaca:", scannedCode);
+
             const matchedItem = masterBarang.find(item => {
-                const kodeItem = (item.kode_barang || item.kode || '').toLowerCase();
-                return kodeItem === scannedCode || kodeItem.includes(scannedCode);
+                const kodeItem = (item.kode_barang || item.kode || item.kodeBarang || item.code || '').trim().toLowerCase();
+                return kodeItem === scannedCode || kodeItem.includes(scannedCode) || scannedCode.includes(kodeItem);
             });
 
             if (matchedItem) {
@@ -188,10 +221,12 @@ function startCameraScanner() {
 }
 
 function stopCameraScanner() {
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
+    const readerDiv = document.getElementById('reader');
+
     if (html5QrCode && isScannerActive) {
         html5QrCode.stop().then(() => {
             isScannerActive = false;
-            const readerDiv = document.getElementById('reader');
             if (readerDiv) readerDiv.style.display = 'none';
             if (btnToggleScanner) {
                 btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
@@ -202,7 +237,6 @@ function stopCameraScanner() {
         });
     } else {
         isScannerActive = false;
-        const readerDiv = document.getElementById('reader');
         if (readerDiv) readerDiv.style.display = 'none';
         if (btnToggleScanner) {
             btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
@@ -217,30 +251,25 @@ function pilihBarang(item) {
     const kodeVal = item.kode_barang || item.kode || '';
     const picVal = item.pic || '';
 
-    if (triggerModal) triggerModal.textContent = namaVal;
+    const triggerModalEl = document.getElementById('triggerModal');
+    if (triggerModalEl) triggerModalEl.textContent = namaVal;
     
-    if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
-    if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
-    if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
+    const poKodeEl = document.getElementById('poKode');
+    if (poKodeEl) poKodeEl.value = kodeVal;
+    const poNamaEl = document.getElementById('poNama');
+    if (poNamaEl) poNamaEl.value = namaVal;
+    const poPicEl = document.getElementById('poPic');
+    if (poPicEl) poPicEl.value = picVal;
 
     stopCameraScanner();
-    popupSearch.style.display = 'none';
+    const popupSearch = document.getElementById('popupSearch');
+    if (popupSearch) popupSearch.style.display = 'none';
+    const searchInput = document.getElementById('searchInputPopup');
     if (searchInput) searchInput.value = '';
 }
 
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        const keyword = this.value.toLowerCase().trim();
-        const filtered = masterBarang.filter(item => {
-            const namaItem = item.nama_barang || item.nama || '';
-            const kodeItem = item.kode_barang || item.kode || '';
-            return namaItem.toLowerCase().includes(keyword) || kodeItem.toLowerCase().includes(keyword);
-        });
-        renderList(filtered);
-    });
-}
-
 function renderList(data) {
+    const itemList = document.getElementById('itemListPopup');
     if (!itemList) return;
     itemList.innerHTML = '';
     if (data.length === 0) {
@@ -268,19 +297,22 @@ function renderList(data) {
 }
 
 async function submitPO(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
-    btn.innerText = "Mengirim...";
-    btn.disabled = true;
+    
+    if (btn) {
+        btn.innerText = "Mengirim...";
+        btn.disabled = true;
+    }
 
     const dataPO = {
         action: 'submitPO',
-        tanggal: document.getElementById('poTanggal').value,
-        kodeBarang: document.getElementById('poKode').value,
-        namaBarang: document.getElementById('poNama').value,
-        pic: document.getElementById('poPic').value,
-        jumlah: document.getElementById('poJumlah').value
+        tanggal: document.getElementById('poTanggal') ? document.getElementById('poTanggal').value : '',
+        kodeBarang: document.getElementById('poKode') ? document.getElementById('poKode').value : '',
+        namaBarang: document.getElementById('poNama') ? document.getElementById('poNama').value : '',
+        pic: document.getElementById('poPic') ? document.getElementById('poPic').value : '',
+        jumlah: document.getElementById('poJumlah') ? document.getElementById('poJumlah').value : ''
     };
 
     try {
@@ -290,14 +322,20 @@ async function submitPO(e) {
         });
         const result = await response.json();
         if (result.status === 'success') {
-            msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
-            document.getElementById('poForm').reset();
-            document.getElementById('poTanggal').value = getLocalDateString();
-            document.getElementById('poKode').value = '';
-            document.getElementById('poNama').value = '';
-            document.getElementById('poPic').value = '';
+            if (msg) msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
+            const poForm = document.getElementById('poForm');
+            if (poForm) poForm.reset();
+            
+            const poTanggal = document.getElementById('poTanggal');
+            if (poTanggal) poTanggal.value = getLocalDateString();
+            
+            if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
+            if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
+            if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
+            const triggerModal = document.getElementById('triggerModal');
             if (triggerModal) triggerModal.textContent = "-- Pilih Barang dari Master --";
-            setTimeout(() => msg.innerText = "", 4000);
+            
+            setTimeout(() => { if (msg) msg.innerText = ""; }, 4000);
         } else {
             alert("Gagal menyimpan: " + result.message);
         }
@@ -305,8 +343,10 @@ async function submitPO(e) {
         alert("Terjadi kesalahan koneksi saat kirim PO!");
         console.error(err);
     } finally {
-        btn.innerText = "Kirim PO";
-        btn.disabled = false;
+        if (btn) {
+            btn.innerText = "Kirim PO";
+            btn.disabled = false;
+        }
     }
 }
 
