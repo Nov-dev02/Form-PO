@@ -1,4 +1,4 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxte5kTB8H88pQ2DKUp4CE0mrnu_3egJhvfApOuERvUOrLKKGrumrf0IVvhRlCpEJktNQ/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
 
 let masterBarang = [];
 let selectedItemData = null;
@@ -134,15 +134,12 @@ async function handleLogin() {
     const dots = `<span class="dots"></span>`;
 
     try {
-        if (btnLogin) btnLogin.innerHTML = `${spinner} Verifikasi akun${dots}`;
-        await new Promise(resolve => setTimeout(resolve, 800));
-
         if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
         
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'login', username: user, password: pass })
-        });
+        // Menggunakan metode GET agar lolos dari kendala CORS / redirect Google Apps Script
+        const targetUrl = `${WEB_APP_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+        
+        const response = await fetch(targetUrl);
         const result = await response.json();
 
         if (result.status === 'success') {
