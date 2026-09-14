@@ -13,6 +13,7 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
+<<<<<<< HEAD
 // Fungsi Jam Real-Time yang otomatis update setiap detik
 function updateRealTimeClock() {
     const now = new Date();
@@ -75,6 +76,9 @@ function setDynamicGreeting(username) {
 
 window.onload = function() {
     updateRealTimeClock();
+=======
+window.onload = function() {
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
     if (poTanggal) poTanggal.value = today;
@@ -124,21 +128,40 @@ async function handleLogin() {
         return;
     }
 
+<<<<<<< HEAD
+=======
+    // Kosongkan pesan error sebelumnya & matikan tombol
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
     if (errDiv) errDiv.innerText = "";
     if (btnLogin) {
         btnLogin.disabled = true;
         btnLogin.style.opacity = "0.7";
     }
+<<<<<<< HEAD
+
+    const spinner = `<span class="spinner"></span>`;
+    const dots = `<span class="dots"></span>`;
+=======
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
 
     const spinner = `<span class="spinner"></span>`;
     const dots = `<span class="dots"></span>`;
 
+    // Tahapan loading dengan spinner muter & titik-titik bergerak dinamis
     try {
         if (btnLogin) btnLogin.innerHTML = `${spinner} Verifikasi akun${dots}`;
+<<<<<<< HEAD
         await new Promise(resolve => setTimeout(resolve, 800));
 
         if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
         
+=======
+        await new Promise(resolve => setTimeout(resolve, 800)); // Jeda sejenak
+
+        if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
+        
+        // Eksekusi fetch ke Google Apps Script
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', username: user, password: pass })
@@ -147,19 +170,33 @@ async function handleLogin() {
 
         if (result.status === 'success') {
             if (btnLogin) btnLogin.innerHTML = `🚀 Akses diterima! Membuka sistem${dots}`;
+<<<<<<< HEAD
             await new Promise(resolve => setTimeout(resolve, 700));
+=======
+            await new Promise(resolve => setTimeout(resolve, 700)); // Jeda sebentar sebelum masuk
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
 
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
             
+<<<<<<< HEAD
+=======
+            // Reset tombol sebelum masuk form
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
             if (btnLogin) {
                 btnLogin.innerHTML = "Masuk";
                 btnLogin.disabled = false;
                 btnLogin.style.opacity = "1";
             }
+<<<<<<< HEAD
             tampilkanFormPO(user);
         } else {
+=======
+            tampilkanFormPO();
+        } else {
+            // Kalau gagal dari server
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
             if (btnLogin) {
                 btnLogin.innerHTML = "Masuk";
                 btnLogin.disabled = false;
@@ -168,6 +205,10 @@ async function handleLogin() {
             if (errDiv) errDiv.innerText = result.message || "Username atau password salah!";
         }
     } catch (err) {
+<<<<<<< HEAD
+=======
+        // Kalau error koneksi / jaringan
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
         if (btnLogin) {
             btnLogin.innerHTML = "Masuk";
             btnLogin.disabled = false;
@@ -187,8 +228,14 @@ async function loadMasterBarang() {
         const result = await response.json();
         if (result.status === 'success') {
             masterBarang = result.data;
+<<<<<<< HEAD
         } else {
             console.warn("Gagal load master barang:", result.message);
+=======
+            console.log("Data Master Barang Berhasil Dimuat:", masterBarang);
+        } else {
+            console.warn("Gagal load master barang dari server:", result.message);
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
@@ -261,7 +308,11 @@ async function startCameraScanner() {
         if (btnToggleScanner) btnToggleScanner.textContent = "Memuat Database...";
         await loadMasterBarang();
         if (masterBarang.length === 0) {
+<<<<<<< HEAD
             alert("Database Master Barang kosong atau gagal dimuat!");
+=======
+            alert("Database Master Barang kosong atau gagal dimuat! Periksa koneksi internet Anda.");
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
             if (btnToggleScanner) btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
             return;
         }
@@ -292,6 +343,8 @@ async function startCameraScanner() {
         },
         (decodedText) => {
             const scannedCode = decodedText.trim().toLowerCase();
+            console.log("QR Code Terbaca:", scannedCode);
+
             const matchedItem = masterBarang.find(item => {
                 const kodeItem = (item.kode_barang || item.kode || item.kodeBarang || item.code || '').trim().toLowerCase();
                 return kodeItem === scannedCode || kodeItem.includes(scannedCode) || scannedCode.includes(kodeItem);
@@ -346,13 +399,23 @@ function pilihBarang(item) {
     const triggerModalEl = document.getElementById('triggerModal');
     if (triggerModalEl) triggerModalEl.textContent = namaVal;
     
-    if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
-    if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
-    if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
+    const poKodeEl = document.getElementById('poKode');
+    if (poKodeEl) poKodeEl.value = kodeVal;
+    const poNamaEl = document.getElementById('poNama');
+    if (poNamaEl) poNamaEl.value = namaVal;
+    const poPicEl = document.getElementById('poPic');
+    if (poPicEl) poPicEl.value = picVal;
 
     stopCameraScanner();
+<<<<<<< HEAD
     if (document.getElementById('popupSearch')) document.getElementById('popupSearch').style.display = 'none';
     if (document.getElementById('searchInputPopup')) document.getElementById('searchInputPopup').value = '';
+=======
+    const popupSearch = document.getElementById('popupSearch');
+    if (popupSearch) popupSearch.style.display = 'none';
+    const searchInput = document.getElementById('searchInputPopup');
+    if (searchInput) searchInput.value = '';
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
 }
 
 function renderList(data) {
@@ -417,6 +480,7 @@ async function submitPO(e) {
             await new Promise(resolve => setTimeout(resolve, 800));
 
             if (msg) msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
+<<<<<<< HEAD
             if (document.getElementById('poForm')) document.getElementById('poForm').reset();
             
             if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
@@ -424,6 +488,19 @@ async function submitPO(e) {
             if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
             if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
             if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
+=======
+            const poForm = document.getElementById('poForm');
+            if (poForm) poForm.reset();
+            
+            const poTanggal = document.getElementById('poTanggal');
+            if (poTanggal) poTanggal.value = getLocalDateString();
+            
+            if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
+            if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
+            if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
+            const triggerModal = document.getElementById('triggerModal');
+            if (triggerModal) triggerModal.textContent = "-- Pilih Barang dari Master --";
+>>>>>>> 535fbaa094cbe54c6a3bb10095628a679faadbf6
             
             setTimeout(() => { if (msg) msg.innerText = ""; }, 4000);
         } else {
