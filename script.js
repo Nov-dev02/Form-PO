@@ -152,11 +152,18 @@ function startCameraScanner() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
+    // Ditingkatkan resolusi & FPS-nya agar super responsif membaca QR botol kecil
     html5QrCode.start(
         { facingMode: "environment" },
         {
-            fps: 10,
-            qrbox: { width: 250, height: 150 }
+            fps: 35,
+            qrbox: { width: 220, height: 220 },
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
         },
         (decodedText, decodedResult) => {
             const scannedCode = decodedText.trim().toLowerCase();
