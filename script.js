@@ -13,23 +13,84 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
-window.onload = function() {
-    const today = getLocalDateString();
-    if (document.getElementById('poTanggal')) {
-        document.getElementById('poTanggal').value = today;
+// Fungsi Jam Real-Time yang otomatis update setiap detik
+function updateRealTimeClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}:${seconds}`;
+    
+    document.querySelectorAll('.real-time-clock').forEach(el => {
+        el.textContent = timeString;
+    });
+}
+setInterval(updateRealTimeClock, 1000);
+
+// Fungsi Sapaan Dinamis dengan Kata Motivasi yang Berubah-ubah (Acak) Sesuai Waktu & Refresh
+function setDynamicGreeting(username) {
+    const greetingEl = document.getElementById('userGreeting');
+    if (!greetingEl) return;
+    
+    const now = new Date();
+    const hour = now.getHours();
+    let waktu = "Malam";
+    let daftarMotivasi = [];
+    
+    if (hour >= 4 && hour < 11) {
+        waktu = "Pagi";
+        daftarMotivasi = [
+            "Awali hari dengan semangat baru dan catat inventaris dengan teliti!",
+            "Pagi yang cerah, semoga stok barang hari ini aman terkendali!",
+            "Semangat pagi! Jangan lupa senyum dan pastikan data PO akurat."
+        ];
+    } else if (hour >= 11 && hour < 15) {
+        waktu = "Siang";
+        daftarMotivasi = [
+            "Tetap fokus dan jaga produktivitas kerja di siang hari ini!",
+            "Udah jam siang, tetap semangat selesaikan tugas gudangnya ya!",
+            "Meskipun gerah di siang hari, pastikan input data tetap presisi!"
+        ];
+    } else if (hour >= 15 && hour < 18) {
+        waktu = "Sore";
+        daftarMotivasi = [
+            "Sebentar lagi jam pulang, selesaikan rekap PO dengan cermat ya!",
+            "Sore-sore gini tetap gaspol, rapikan sisa laporan gudang!",
+            "Hampir jam pulang, cek sekali lagi data barang masuknya biar pas."
+        ];
+    } else {
+        waktu = "Malam";
+        daftarMotivasi = [
+            "Kerja hebat! Pastikan semua data PO tercatat dengan akurat.",
+            "Lembur malam tetap produktif, jaga kesehatan ya bro!",
+            "Malam tenang, waktunya beresin tugas terakhir dengan teliti."
+        ];
     }
+    
+    // Mengambil kalimat motivasi secara acak setiap kali halaman direfresh / dibuka
+    const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
+    
+    greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">${motivasiAcak}</span>`;
+}
+
+window.onload = function() {
+    updateRealTimeClock();
+    const today = getLocalDateString();
+    const poTanggal = document.getElementById('poTanggal');
+    if (poTanggal) poTanggal.value = today;
 
     const savedUser = localStorage.getItem('po_user');
     const loginDate = localStorage.getItem('po_login_date');
 
     if (savedUser && loginDate === today) {
-        tampilkanFormPO();
+        tampilkanFormPO(savedUser);
     } else {
         localStorage.clear();
         tampilkanLogin();
     }
 
     initRobotAnimation();
+    initEventListeners();
 };
 
 function tampilkanLogin() {
@@ -39,27 +100,45 @@ function tampilkanLogin() {
     if (poSec) poSec.classList.add('hidden');
 }
 
-function tampilkanFormPO() {
+function tampilkanFormPO(username) {
     const loginSec = document.getElementById('loginSection');
     const poSec = document.getElementById('poSection');
     if (loginSec) loginSec.classList.add('hidden');
     if (poSec) poSec.classList.remove('hidden');
+    
+    setDynamicGreeting(username);
     loadMasterBarang();
 }
 
 async function handleLogin() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
     const errDiv = document.getElementById('loginError');
+    const btnLogin = document.getElementById('btnLogin');
+
+    const user = usernameInput ? usernameInput.value.trim() : '';
+    const pass = passwordInput ? passwordInput.value.trim() : '';
 
     if (!user || !pass) {
-        errDiv.innerText = "Username dan password wajib diisi!";
+        if (errDiv) errDiv.innerText = "Username dan password wajib diisi!";
         return;
     }
 
-    errDiv.innerText = "Memverifikasi...";
+    if (errDiv) errDiv.innerText = "";
+    if (btnLogin) {
+        btnLogin.disabled = true;
+        btnLogin.style.opacity = "0.7";
+    }
+
+    const spinner = `<span class="spinner"></span>`;
+    const dots = `<span class="dots"></span>`;
 
     try {
+        if (btnLogin) btnLogin.innerHTML = `${spinner} Verifikasi akun${dots}`;
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
+        
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', username: user, password: pass })
@@ -67,15 +146,34 @@ async function handleLogin() {
         const result = await response.json();
 
         if (result.status === 'success') {
+            if (btnLogin) btnLogin.innerHTML = `🚀 Akses diterima! Membuka sistem${dots}`;
+            await new Promise(resolve => setTimeout(resolve, 700));
+
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
-            tampilkanFormPO();
+            
+            if (btnLogin) {
+                btnLogin.innerHTML = "Masuk";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
+            tampilkanFormPO(user);
         } else {
-            errDiv.innerText = result.message;
+            if (btnLogin) {
+                btnLogin.innerHTML = "Masuk";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
+            if (errDiv) errDiv.innerText = result.message || "Username atau password salah!";
         }
     } catch (err) {
-        errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+        if (btnLogin) {
+            btnLogin.innerHTML = "Masuk";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
+        }
+        if (errDiv) errDiv.innerText = "Gagal terhubung ke server Apps Script!";
         console.error(err);
     }
 }
@@ -89,63 +187,91 @@ async function loadMasterBarang() {
         const result = await response.json();
         if (result.status === 'success') {
             masterBarang = result.data;
+        } else {
+            console.warn("Gagal load master barang:", result.message);
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
     }
 }
 
-const triggerModal = document.getElementById('triggerModal');
-const popupSearch = document.getElementById('popupSearch');
-const searchInput = document.getElementById('searchInputPopup');
-const itemList = document.getElementById('itemListPopup');
-const btnCloseModal = document.getElementById('btnCloseModal');
-const btnToggleScanner = document.getElementById('btnToggleScanner');
+function initEventListeners() {
+    const triggerModal = document.getElementById('triggerModal');
+    const popupSearch = document.getElementById('popupSearch');
+    const searchInput = document.getElementById('searchInputPopup');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
 
-if (triggerModal) {
-    triggerModal.addEventListener('click', function() {
-        popupSearch.style.display = 'flex';
-        searchInput.value = '';
-        renderList(masterBarang);
-        searchInput.focus();
-    });
-}
+    if (triggerModal) {
+        triggerModal.addEventListener('click', function() {
+            if (popupSearch) popupSearch.style.display = 'flex';
+            if (searchInput) searchInput.value = '';
+            renderList(masterBarang);
+            if (searchInput) searchInput.focus();
+        });
+    }
 
-if (btnCloseModal) {
-    btnCloseModal.addEventListener('click', function() {
-        popupSearch.style.display = 'none';
-        searchInput.value = '';
-        renderList(masterBarang);
-        stopCameraScanner();
-    });
-}
-
-if (popupSearch) {
-    popupSearch.addEventListener('click', function(e) {
-        if (e.target === popupSearch) {
-            popupSearch.style.display = 'none';
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', function() {
+            if (popupSearch) popupSearch.style.display = 'none';
+            if (searchInput) searchInput.value = '';
+            renderList(masterBarang);
             stopCameraScanner();
-        }
-    });
+        });
+    }
+
+    if (popupSearch) {
+        popupSearch.addEventListener('click', function(e) {
+            if (e.target === popupSearch) {
+                popupSearch.style.display = 'none';
+                stopCameraScanner();
+            }
+        });
+    }
+
+    if (btnToggleScanner) {
+        btnToggleScanner.addEventListener('click', function() {
+            if (!isScannerActive) {
+                startCameraScanner();
+            } else {
+                stopCameraScanner();
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.toLowerCase().trim();
+            const filtered = masterBarang.filter(item => {
+                const namaItem = item.nama_barang || item.nama || '';
+                const kodeItem = item.kode_barang || item.kode || '';
+                return namaItem.toLowerCase().includes(keyword) || kodeItem.toLowerCase().includes(keyword);
+            });
+            renderList(filtered);
+        });
+    }
 }
 
-if (btnToggleScanner) {
-    btnToggleScanner.addEventListener('click', function() {
-        if (!isScannerActive) {
-            startCameraScanner();
-        } else {
-            stopCameraScanner();
-        }
-    });
-}
-
-function startCameraScanner() {
+async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
     if (!readerDiv) return;
+
+    if (masterBarang.length === 0) {
+        if (btnToggleScanner) btnToggleScanner.textContent = "Memuat Database...";
+        await loadMasterBarang();
+        if (masterBarang.length === 0) {
+            alert("Database Master Barang kosong atau gagal dimuat!");
+            if (btnToggleScanner) btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
+            return;
+        }
+    }
     
     readerDiv.style.display = 'block';
-    btnToggleScanner.textContent = "Tutup Kamera Scanner";
-    btnToggleScanner.style.background = "#dc3545";
+    if (btnToggleScanner) {
+        btnToggleScanner.textContent = "Tutup Kamera Scanner";
+        btnToggleScanner.style.background = "#dc3545";
+    }
     isScannerActive = true;
 
     if (!html5QrCode) {
@@ -155,14 +281,20 @@ function startCameraScanner() {
     html5QrCode.start(
         { facingMode: "environment" },
         {
-            fps: 10,
-            qrbox: { width: 250, height: 150 }
+            fps: 35,
+            qrbox: { width: 220, height: 220 },
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
         },
-        (decodedText, decodedResult) => {
+        (decodedText) => {
             const scannedCode = decodedText.trim().toLowerCase();
             const matchedItem = masterBarang.find(item => {
-                const kodeItem = (item.kode_barang || item.kode || '').toLowerCase();
-                return kodeItem === scannedCode || kodeItem.includes(scannedCode);
+                const kodeItem = (item.kode_barang || item.kode || item.kodeBarang || item.code || '').trim().toLowerCase();
+                return kodeItem === scannedCode || kodeItem.includes(scannedCode) || scannedCode.includes(kodeItem);
             });
 
             if (matchedItem) {
@@ -172,19 +304,21 @@ function startCameraScanner() {
                 alert(`Barcode "${decodedText}" tidak ditemukan di database Master Barang!`);
             }
         },
-        (errorMessage) => {}
+        () => {}
     ).catch(err => {
         console.error("Gagal membuka kamera:", err);
-        alert("Gagal mengakses kamera HP. Pastikan izin kamera diizinkan.");
+        alert("Gagal mengakses kamera HP.");
         stopCameraScanner();
     });
 }
 
 function stopCameraScanner() {
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
+    const readerDiv = document.getElementById('reader');
+
     if (html5QrCode && isScannerActive) {
         html5QrCode.stop().then(() => {
             isScannerActive = false;
-            const readerDiv = document.getElementById('reader');
             if (readerDiv) readerDiv.style.display = 'none';
             if (btnToggleScanner) {
                 btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
@@ -195,7 +329,6 @@ function stopCameraScanner() {
         });
     } else {
         isScannerActive = false;
-        const readerDiv = document.getElementById('reader');
         if (readerDiv) readerDiv.style.display = 'none';
         if (btnToggleScanner) {
             btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
@@ -210,34 +343,24 @@ function pilihBarang(item) {
     const kodeVal = item.kode_barang || item.kode || '';
     const picVal = item.pic || '';
 
-    if (triggerModal) triggerModal.textContent = namaVal;
+    const triggerModalEl = document.getElementById('triggerModal');
+    if (triggerModalEl) triggerModalEl.textContent = namaVal;
     
     if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
     if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
     if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
 
     stopCameraScanner();
-    popupSearch.style.display = 'none';
-    if (searchInput) searchInput.value = '';
-}
-
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        const keyword = this.value.toLowerCase().trim();
-        const filtered = masterBarang.filter(item => {
-            const namaItem = item.nama_barang || item.nama || '';
-            const kodeItem = item.kode_barang || item.kode || '';
-            return namaItem.toLowerCase().includes(keyword) || kodeItem.toLowerCase().includes(keyword);
-        });
-        renderList(filtered);
-    });
+    if (document.getElementById('popupSearch')) document.getElementById('popupSearch').style.display = 'none';
+    if (document.getElementById('searchInputPopup')) document.getElementById('searchInputPopup').value = '';
 }
 
 function renderList(data) {
+    const itemList = document.getElementById('itemListPopup');
     if (!itemList) return;
     itemList.innerHTML = '';
     if (data.length === 0) {
-        itemList.innerHTML = `<div style="padding: 15px; color: #000000; text-align: center; font-size: 14px; font-weight: bold;">Barang tidak ditemukan</div>`;
+        itemList.innerHTML = `<div style="padding: 15px; color: #94a3b8; text-align: center; font-size: 14px;">Barang tidak ditemukan</div>`;
         return;
     }
 
@@ -261,19 +384,26 @@ function renderList(data) {
 }
 
 async function submitPO(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
-    btn.innerText = "Mengirim...";
-    btn.disabled = true;
+    
+    const spinner = `<span class="spinner"></span>`;
+    const dots = `<span class="dots"></span>`;
+
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        btn.innerHTML = `${spinner} Mengirim PO${dots}`;
+    }
 
     const dataPO = {
         action: 'submitPO',
-        tanggal: document.getElementById('poTanggal').value,
-        kodeBarang: document.getElementById('poKode').value,
-        namaBarang: document.getElementById('poNama').value,
-        pic: document.getElementById('poPic').value,
-        jumlah: document.getElementById('poJumlah').value
+        tanggal: document.getElementById('poTanggal') ? document.getElementById('poTanggal').value : '',
+        kodeBarang: document.getElementById('poKode') ? document.getElementById('poKode').value : '',
+        namaBarang: document.getElementById('poNama') ? document.getElementById('poNama').value : '',
+        pic: document.getElementById('poPic') ? document.getElementById('poPic').value : '',
+        jumlah: document.getElementById('poJumlah') ? document.getElementById('poJumlah').value : ''
     };
 
     try {
@@ -283,14 +413,19 @@ async function submitPO(e) {
         });
         const result = await response.json();
         if (result.status === 'success') {
-            msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
-            document.getElementById('poForm').reset();
-            document.getElementById('poTanggal').value = getLocalDateString();
-            document.getElementById('poKode').value = '';
-            document.getElementById('poNama').value = '';
-            document.getElementById('poPic').value = '';
-            if (triggerModal) triggerModal.textContent = "-- Pilih Barang dari Master --";
-            setTimeout(() => msg.innerText = "", 4000);
+            if (btn) btn.innerHTML = `✅ Berhasil Dikirim!`;
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            if (msg) msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
+            if (document.getElementById('poForm')) document.getElementById('poForm').reset();
+            
+            if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
+            if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
+            if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
+            if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
+            if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
+            
+            setTimeout(() => { if (msg) msg.innerText = ""; }, 4000);
         } else {
             alert("Gagal menyimpan: " + result.message);
         }
@@ -298,8 +433,11 @@ async function submitPO(e) {
         alert("Terjadi kesalahan koneksi saat kirim PO!");
         console.error(err);
     } finally {
-        btn.innerText = "Kirim PO";
-        btn.disabled = false;
+        if (btn) {
+            btn.innerHTML = "Kirim PO";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        }
     }
 }
 

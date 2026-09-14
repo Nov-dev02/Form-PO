@@ -80,17 +80,32 @@ body {
     transform: translate(-16px, -12px) rotate(-35deg);
 }
 
+.header-login {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
 h2 {
     font-size: 24px;
-    margin-bottom: 8px;
-    text-align: center;
+    margin-bottom: 0;
     color: #f8fafc;
+}
+
+.clock {
+    font-size: 12px;
+    font-weight: 600;
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 4px 10px;
+    border-radius: 20px;
+    color: #38bdf8;
 }
 
 .subtitle {
     font-size: 14px;
     color: #94a3b8;
-    text-align: center;
     margin-bottom: 24px;
 }
 
@@ -105,7 +120,6 @@ h2 {
     margin-bottom: 6px;
 }
 
-/* Pengaturan Global Semua Jenis Input agar Lebar & Seragam */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -146,7 +160,6 @@ input[type="number"]:focus {
     z-index: 2;
 }
 
-/* Padding khusus input yang punya ikon kiri & kanan */
 .input-with-icon input {
     padding: 12px 48px 12px 48px;
 }
@@ -209,8 +222,16 @@ button:hover {
 .header-po {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.user-greeting {
+    font-size: 13px;
+    color: #38bdf8;
+    margin-top: 4px;
+    line-height: 1.4;
+    font-weight: 500;
 }
 
 .btn-logout {
@@ -367,4 +388,131 @@ input[readonly] {
     text-align: center;
     font-size: 12px;
     color: #64748b;
+}
+
+/* SPINNER & DOTS */
+.spinner {
+    display: inline-block !important;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2.5px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    border-top-color: #ffffff !important;
+    animation: spin 0.7s linear infinite !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.dots::after {
+    content: '';
+    animation: dotAnimation 1.5s infinite steps(4, end);
+}
+
+@keyframes dotAnimation {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+}
+
+/* SCANNER BUTTON */
+#btnToggleScanner {
+    width: 100% !important;
+    padding: 14px 20px !important;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.3s ease !important;
+    margin-bottom: 15px !important;
+}
+
+#btnToggleScanner:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    filter: brightness(1.05) !important;
+}
+
+/* SOCIAL AREA */
+.social-area {
+    margin-top: 25px !important;
+    text-align: center !important;
+    padding-top: 15px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.social-label {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    margin-bottom: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+}
+
+.social-list {
+    display: flex !important;
+    justify-content: center !important;
+    list-style: none !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    margin: 0 auto 15px auto !important;
+}
+
+.social-list li {
+    position: relative !important;
+    width: 42px !important;
+    height: 42px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    transition: 0.5s !important;
+}
+
+.social-list li::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0px !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    transition: 0.5s !important;
+    border-radius: 10px !important;
+}
+
+.social-list li:hover::before {
+    inset: -4px !important;
+    box-shadow: 0 0 10px var(--clr), 0 0 20px var(--clr) !important;
+    border-color: var(--clr) !important;
+}
+
+.social-list li a {
+    position: relative !important;
+    font-size: 18px !important;
+    color: #fff !important;
+    transition: 0.5s !important;
+    text-decoration: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.social-list li:hover a {
+    color: var(--clr) !important;
+    transform: scale(1.15) !important;
 }

@@ -6,6 +6,7 @@
     <title>Sistem PO Gudang</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="Favicon/Logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Html5-qrcode library untuk scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
@@ -49,7 +50,10 @@
                 </svg>
             </div>
 
-            <h2>Login Gudang</h2>
+            <div class="header-login">
+                <h2>Login Gudang</h2>
+                <div class="real-time-clock clock">00:00:00</div>
+            </div>
             <p class="subtitle">Silakan masuk menggunakan akun Anda</p>
 
             <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
@@ -78,14 +82,36 @@
 
                 <button type="submit" id="btnLogin">Masuk</button>
                 <div id="loginError" class="error-msg"></div>
+                
+                <div class="social-area">
+                    <div class="social-label">My Social Media</div>
+                    <ul class="social-list">
+                        <li style="--clr: #1877f2;"><a href="https://www.facebook.com/share/19SnivRaFn/" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+                        <li style="--clr: #e1306c;"><a href="https://www.instagram.com/novan.arifki?stkn=MWIxczdzMDNqb2JvMg==" target="_blank"><i class="fab fa-instagram"></i></a></li>
+                        <li style="--clr: #ff0050;"><a href="https://www.tiktok.com/@novanarifki2?_r=1&_t=ZS-99inoYcem1t" target="_blank"><i class="fab fa-tiktok"></i></a></li>
+                        <li style="--clr: #ff0000;"><a href="https://youtube.com/@tkreggaemusic?si=4VlILbHVgAQ4IThP" target="_blank"><i class="fab fa-youtube"></i></a></li>
+                        <li style="--clr: #25d366;"><a href="Https://wa.me/6287762756779" target="_blank"><i class="fab fa-whatsapp"></i></a></li>
+                    </ul>
+
+                    <div class="social-label">My Repository</div>
+                    <ul class="social-list" style="margin-bottom: 0 !important;">
+                        <li style="--clr: #ffffff;"><a href="https://github.com/Nov-dev02?tab=repositories" target="_blank"><i class="fab fa-github"></i></a></li>
+                    </ul>
+                </div>
             </form>
         </div>
 
         <!-- PO Form Section -->
         <div id="poSection" class="hidden">
             <div class="header-po">
-                <h2>Form Purchase Order</h2>
-                <button type="button" class="btn-logout" onclick="handleLogout()">Logout</button>
+                <div>
+                    <h2>Form Purchase Order</h2>
+                    <div id="userGreeting" class="user-greeting"></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="real-time-clock clock">00:00:00</div>
+                    <button type="button" class="btn-logout" onclick="handleLogout()">Logout</button>
+                </div>
             </div>
             <p class="subtitle">Buat PO barang gudang dengan mudah</p>
 
@@ -147,7 +173,7 @@
     </div>
 
     <div class="footer-app">
-        &copy; 2026 All Right Reserved By: Novan Arifki
+        &copy; 2026 All Right Reserved By : Novan Arifki
     </div>
 
     <script src="script.js"></script>
