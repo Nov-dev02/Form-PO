@@ -339,9 +339,13 @@ async function submitPO(e) {
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
     
+    const spinner = `<span class="spinner"></span>`;
+    const dots = `<span class="dots"></span>`;
+
     if (btn) {
-        btn.innerText = "Mengirim...";
         btn.disabled = true;
+        btn.style.opacity = "0.7";
+        btn.innerHTML = `${spinner} Mengirim PO${dots}`;
     }
 
     const dataPO = {
@@ -360,6 +364,9 @@ async function submitPO(e) {
         });
         const result = await response.json();
         if (result.status === 'success') {
+            if (btn) btn.innerHTML = `✅ Berhasil Dikirim!`;
+            await new Promise(resolve => setTimeout(resolve, 800));
+
             if (msg) msg.innerText = "Data PO berhasil dikirim ke Google Sheet!";
             const poForm = document.getElementById('poForm');
             if (poForm) poForm.reset();
@@ -382,8 +389,9 @@ async function submitPO(e) {
         console.error(err);
     } finally {
         if (btn) {
-            btn.innerText = "Kirim PO";
+            btn.innerHTML = "Kirim PO";
             btn.disabled = false;
+            btn.style.opacity = "1";
         }
     }
 }
