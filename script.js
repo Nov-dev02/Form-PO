@@ -67,7 +67,6 @@ function setDynamicGreeting(username) {
         ];
     }
     
-    // Mengambil kalimat motivasi secara acak setiap kali halaman direfresh / dibuka
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
     
     greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">${motivasiAcak}</span>`;
@@ -136,10 +135,15 @@ async function handleLogin() {
     try {
         if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
         
-        // Menggunakan metode GET agar lolos dari kendala CORS / redirect Google Apps Script
-        const targetUrl = `${WEB_APP_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
-        
-        const response = await fetch(targetUrl);
+        // Menggunakan POST agar lolos dari kendala redirect & CORS Google Apps Script
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'login',
+                username: user,
+                password: pass
+            })
+        });
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -404,25 +408,18 @@ async function submitPO(e) {
     };
 
     try {
-        // Menggunakan mode: 'no-cors' agar browser tidak memblokir respon Google Apps Script
         await fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-            },
             body: JSON.stringify(dataPO)
         });
 
-        // Karena mode no-cors membuat respon menjadi opaque, 
-        // kita asumsikan sukses langsung karena request berhasil dikirim ke endpoint.
         if (btn) btn.innerHTML = `✅ Berhasil Dikirim!`;
         await new Promise(resolve => setTimeout(resolve, 600));
 
-        if (msg) msg.innerText = "Data PO berhasil dicatat!";
+        if (msg) msg.innerText = "Data PO Berhasil Disimpan di Google Sheets!";
         if (document.getElementById('poForm')) document.getElementById('poForm').reset();
         
-        // Reset field form
         if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
         if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
         if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
