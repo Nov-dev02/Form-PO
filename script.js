@@ -51,6 +51,7 @@ async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const errDiv = document.getElementById('loginError');
+    const btnLogin = document.getElementById('btnLogin');
 
     const user = usernameInput ? usernameInput.value.trim() : '';
     const pass = passwordInput ? passwordInput.value.trim() : '';
@@ -60,9 +61,24 @@ async function handleLogin() {
         return;
     }
 
-    if (errDiv) errDiv.innerText = "Memverifikasi...";
+    // Kosongkan pesan error sebelumnya & matikan tombol
+    if (errDiv) errDiv.innerText = "";
+    if (btnLogin) {
+        btnLogin.disabled = true;
+        btnLogin.style.opacity = "0.7";
+    }
 
+    const spinner = `<span class="spinner"></span>`;
+    const dots = `<span class="dots"></span>`;
+
+    // Tahapan loading dengan spinner muter & titik-titik bergerak dinamis
     try {
+        if (btnLogin) btnLogin.innerHTML = `${spinner} Verifikasi akun${dots}`;
+        await new Promise(resolve => setTimeout(resolve, 800)); // Jeda sejenak
+
+        if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
+        
+        // Eksekusi fetch ke Google Apps Script
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', username: user, password: pass })
@@ -70,14 +86,36 @@ async function handleLogin() {
         const result = await response.json();
 
         if (result.status === 'success') {
+            if (btnLogin) btnLogin.innerHTML = `🚀 Akses diterima! Membuka sistem${dots}`;
+            await new Promise(resolve => setTimeout(resolve, 700)); // Jeda sebentar sebelum masuk
+
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
+            
+            // Reset tombol sebelum masuk form
+            if (btnLogin) {
+                btnLogin.innerHTML = "Masuk";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
             tampilkanFormPO();
         } else {
-            if (errDiv) errDiv.innerText = result.message;
+            // Kalau gagal dari server
+            if (btnLogin) {
+                btnLogin.innerHTML = "Masuk";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
+            if (errDiv) errDiv.innerText = result.message || "Username atau password salah!";
         }
     } catch (err) {
+        // Kalau error koneksi / jaringan
+        if (btnLogin) {
+            btnLogin.innerHTML = "Masuk";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
+        }
         if (errDiv) errDiv.innerText = "Gagal terhubung ke server Apps Script!";
         console.error(err);
     }
