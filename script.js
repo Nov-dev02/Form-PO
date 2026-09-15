@@ -196,7 +196,7 @@ async function loadMasterBarang() {
     }
 }
 
-// Render daftar barang ke dalam modal pop-up (YANG SEBELUMNYA HILANG)
+// Render daftar barang ke dalam modal pop-up
 function renderList(data) {
     const container = document.getElementById('itemListPopup');
     if (!container) return;
@@ -284,7 +284,7 @@ function initEventListeners() {
     }
 }
 
-// Fungsi Standalone Tombol Kamera (Bersih & Cepat)
+// Fungsi Standalone Tombol Kamera (Aman dari error scan ongoing)
 async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
@@ -301,6 +301,10 @@ async function startCameraScanner() {
     }
 
     try {
+        if (html5QrCode.isScanning) {
+            await html5QrCode.stop();
+        }
+
         await html5QrCode.start(
             { facingMode: "environment" },
             {
@@ -320,16 +324,17 @@ async function startCameraScanner() {
     }
 }
 
-// Fungsi Stop Kamera (YANG SEBELUMNYA HILANG)
+// Fungsi Stop Kamera (Aman)
 async function stopCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
     const titleScanner = document.getElementById('scannerTextTitle');
 
-    if (html5QrCode && isScannerActive) {
+    if (html5QrCode) {
         try {
-            await html5QrCode.stop();
-            await html5QrCode.clear();
+            if (html5QrCode.isScanning) {
+                await html5QrCode.stop();
+            }
         } catch (err) {
             console.log("Gagal stop scanner:", err);
         }
@@ -341,11 +346,10 @@ async function stopCameraScanner() {
     isScannerActive = false;
 }
 
-// Callback ketika Barcode/QR berhasil dibaca (YANG SEBELUMNYA HILANG)
+// Callback ketika Barcode/QR berhasil dibaca
 function onScanSuccess(decodedText, decodedResult) {
     console.log(`Scan berhasil: ${decodedText}`);
     
-    // Cocokkan hasil scan dengan database master barang
     const found = masterBarang.find(item => {
         const kode = (item.kode_barang || item.kode || '').toString().trim().toLowerCase();
         const nama = (item.nama_barang || item.nama || '').toString().trim().toLowerCase();
@@ -370,7 +374,7 @@ function onScanSuccess(decodedText, decodedResult) {
 }
 
 function onScanFailure(error) {
-    // Diabaikan agar tidak spam console log saat mencari barcode di setiap frame kamera
+    // Diabaikan agar tidak spam console log
 }
 
 async function submitPO(e) {
@@ -496,4 +500,3 @@ function tambahJumlah(angka) {
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
     inputJumlah.value = nilaiSekarang + angka;
 }
-    
