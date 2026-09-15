@@ -226,6 +226,14 @@ function pilihBarang(kode, nama, pic) {
     document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
     document.getElementById('popupSearch').style.display = 'none';
     stopCameraScanner();
+
+    // 🚀 TAMBAHAN: Auto-scroll halus ke bawah (area jumlah / tombol kirim)
+    setTimeout(() => {
+        const submitBtn = document.querySelector('#poSection button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 150);
 }
 
 function initEventListeners() {
@@ -358,18 +366,27 @@ function onScanSuccess(decodedText, decodedResult) {
     });
 
     if (found) {
-        document.getElementById('poKode').value = found.kode_barang || found.kode || '';
-        document.getElementById('poNama').value = found.nama_barang || found.nama || '';
-        document.getElementById('poPic').value = found.pic || '';
-        document.getElementById('triggerModal').textContent = `${found.kode_barang || found.kode} - ${found.nama_barang || found.nama}`;
+        const kode = found.kode_barang || found.kode || '';
+        const nama = found.nama_barang || found.nama || '';
+        const pic = found.pic || '';
         
-        stopCameraScanner();
-        alert(`Berhasil memilih barang: ${found.nama_barang || found.nama}`);
+        // Memanggil pilihBarang agar form terisi, modal tertutup, dan otomatis auto-scroll
+        pilihBarang(kode, nama, pic);
+        
+        alert(`Berhasil memilih barang: ${nama}`);
     } else {
         document.getElementById('poKode').value = decodedText;
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         alert(`Kode terdeteksi: ${decodedText} (Tidak ada di master barang, kode dimasukkan manual)`);
+
+        // 🚀 TAMBAHAN: Auto-scroll juga untuk kode manual hasil scan
+        setTimeout(() => {
+            const submitBtn = document.querySelector('#poSection button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 150);
     }
 }
 
