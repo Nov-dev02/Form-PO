@@ -13,7 +13,7 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
-// Fungsi Jam Real-Time yang otomatis update setiap detik
+// Fungsi Jam Real-Time
 function updateRealTimeClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -27,7 +27,7 @@ function updateRealTimeClock() {
 }
 setInterval(updateRealTimeClock, 1000);
 
-// Fungsi Sapaan Dinamis dengan Kata Motivasi yang Berubah-ubah (Acak) Sesuai Waktu & Refresh
+// Fungsi Sapaan Dinamis
 function setDynamicGreeting(username) {
     const greetingEl = document.getElementById('userGreeting');
     if (!greetingEl) return;
@@ -68,7 +68,6 @@ function setDynamicGreeting(username) {
     }
     
     const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
-    
     greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">${motivasiAcak}</span>`;
 }
 
@@ -135,7 +134,6 @@ async function handleLogin() {
     try {
         if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
         
-        // Menggunakan POST agar lolos dari kendala redirect & CORS Google Apps Script
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({
@@ -179,6 +177,7 @@ async function handleLogin() {
     }
 }
 
+// Fungsi Load Master Barang dari Google Sheets
 async function loadMasterBarang() {
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -188,12 +187,45 @@ async function loadMasterBarang() {
         const result = await response.json();
         if (result.status === 'success') {
             masterBarang = result.data;
+            console.log("Master barang berhasil dimuat:", masterBarang.length, "item");
         } else {
             console.warn("Gagal load master barang:", result.message);
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
     }
+}
+
+// Render daftar barang ke dalam modal pop-up (YANG SEBELUMNYA HILANG)
+function renderList(data) {
+    const container = document.getElementById('itemListPopup');
+    if (!container) return;
+
+    if (!data || data.length === 0) {
+        container.innerHTML = `<div style="padding: 15px; text-align: center; color: #94a3b8; font-size: 13px;">Tidak ada barang ditemukan</div>`;
+        return;
+    }
+
+    container.innerHTML = data.map(item => {
+        const kode = item.kode_barang || item.kode || '-';
+        const nama = item.nama_barang || item.nama || '-';
+        const pic = item.pic || '-';
+        return `
+            <div class="item-pilihan" onclick="pilihBarang('${kode}', '${nama}', '${pic}')">
+                <span class="item-kode">${kode}</span>
+                <span class="item-nama">${nama} (${pic})</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function pilihBarang(kode, nama, pic) {
+    document.getElementById('poKode').value = kode;
+    document.getElementById('poNama').value = nama;
+    document.getElementById('poPic').value = pic;
+    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
+    document.getElementById('popupSearch').style.display = 'none';
+    stopCameraScanner();
 }
 
 function initEventListeners() {
@@ -216,7 +248,6 @@ function initEventListeners() {
         btnCloseModal.addEventListener('click', function() {
             if (popupSearch) popupSearch.style.display = 'none';
             if (searchInput) searchInput.value = '';
-            renderList(masterBarang);
             stopCameraScanner();
         });
     }
@@ -253,43 +284,12 @@ function initEventListeners() {
     }
 }
 
+// Fungsi Standalone Tombol Kamera (Bersih & Cepat)
 async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
-    const titleScanner = document.getElementById('scannerTextTitle'); // Target teks di dalam span
+    const titleScanner = document.getElementById('scannerTextTitle');
     if (!readerDiv) return;
-
-    // Jika scanner sedang aktif, tombol ini berfungsi untuk MENUTUP scanner
-    if (isScannerActive) {
-        if (html5QrCode) {
-            try {
-                await html5QrCode.stop();
-                await html5QrCode.clear();
-            } catch (err) {
-                console.log("Gagal stop scanner:", err);
-            }
-        }
-        readerDiv.style.display = 'none';
-        if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
-        if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
-        isScannerActive = false;
-        return;
-    }
-
-    // Jika database master barang belum dimuat
-    if (masterBarang.length === 0) {
-        if (titleScanner) titleScanner.textContent = "Memuat Database...";
-        if (btnToggleScanner) btnToggleScanner.style.borderColor = '#eab308';
-        
-        await loadMasterBarang();
-        
-        if (masterBarang.length === 0) {
-            alert("Database Master Barang kosong atau gagal dimuat!");
-            if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
-            if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
-            return;
-        }
-    }
 
     readerDiv.style.display = 'block';
     if (titleScanner) titleScanner.textContent = "🔴 Tutup Scanner";
@@ -300,7 +300,6 @@ async function startCameraScanner() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Jalankan kamera (sesuaikan nama fungsi success/error kamu jika berbeda, misal onScanSuccess)
     try {
         await html5QrCode.start(
             { facingMode: "environment" },
@@ -313,12 +312,65 @@ async function startCameraScanner() {
         );
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
-        alert("Tidak dapat mengakses kamera. Pastikan izin kamera diizinkan di browser/HP kamu!");
+        alert("Tidak dapat mengakses kamera: " + (err.message || err));
         readerDiv.style.display = 'none';
         if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
         isScannerActive = false;
     }
+}
+
+// Fungsi Stop Kamera (YANG SEBELUMNYA HILANG)
+async function stopCameraScanner() {
+    const readerDiv = document.getElementById('reader');
+    const btnToggleScanner = document.getElementById('btnToggleScanner');
+    const titleScanner = document.getElementById('scannerTextTitle');
+
+    if (html5QrCode && isScannerActive) {
+        try {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+        } catch (err) {
+            console.log("Gagal stop scanner:", err);
+        }
+    }
+
+    if (readerDiv) readerDiv.style.display = 'none';
+    if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+    if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
+    isScannerActive = false;
+}
+
+// Callback ketika Barcode/QR berhasil dibaca (YANG SEBELUMNYA HILANG)
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Scan berhasil: ${decodedText}`);
+    
+    // Cocokkan hasil scan dengan database master barang
+    const found = masterBarang.find(item => {
+        const kode = (item.kode_barang || item.kode || '').toString().trim().toLowerCase();
+        const nama = (item.nama_barang || item.nama || '').toString().trim().toLowerCase();
+        const scan = decodedText.trim().toLowerCase();
+        return kode === scan || nama.includes(scan);
+    });
+
+    if (found) {
+        document.getElementById('poKode').value = found.kode_barang || found.kode || '';
+        document.getElementById('poNama').value = found.nama_barang || found.nama || '';
+        document.getElementById('poPic').value = found.pic || '';
+        document.getElementById('triggerModal').textContent = `${found.kode_barang || found.kode} - ${found.nama_barang || found.nama}`;
+        
+        stopCameraScanner();
+        alert(`Berhasil memilih barang: ${found.nama_barang || found.nama}`);
+    } else {
+        document.getElementById('poKode').value = decodedText;
+        document.getElementById('triggerModal').textContent = decodedText;
+        stopCameraScanner();
+        alert(`Kode terdeteksi: ${decodedText} (Tidak ada di master barang, kode dimasukkan manual)`);
+    }
+}
+
+function onScanFailure(error) {
+    // Diabaikan agar tidak spam console log saat mencari barcode di setiap frame kamera
 }
 
 async function submitPO(e) {
@@ -438,8 +490,10 @@ function handleLogout() {
     localStorage.clear();
     tampilkanLogin();
 }
+
 function tambahJumlah(angka) {
     let inputJumlah = document.getElementById('poJumlah');
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
-    inputJumlah.value = nilaiSekarang + angka; // Jangan lupa bagian ini buat masukin angkanya!
+    inputJumlah.value = nilaiSekarang + angka;
 }
+    
