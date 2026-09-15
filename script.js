@@ -259,7 +259,24 @@ async function startCameraScanner() {
     const titleScanner = document.getElementById('scannerTextTitle'); // Target teks di dalam span
     if (!readerDiv) return;
 
-    // Kalau database barang belum dimuat
+    // Jika scanner sedang aktif, tombol ini berfungsi untuk MENUTUP scanner
+    if (isScannerActive) {
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+                await html5QrCode.clear();
+            } catch (err) {
+                console.log("Gagal stop scanner:", err);
+            }
+        }
+        readerDiv.style.display = 'none';
+        if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+        if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
+        isScannerActive = false;
+        return;
+    }
+
+    // Jika database master barang belum dimuat
     if (masterBarang.length === 0) {
         if (titleScanner) titleScanner.textContent = "Memuat Database...";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#eab308';
@@ -274,20 +291,34 @@ async function startCameraScanner() {
         }
     }
 
-    // Tampilkan kotak kamera (reader)
     readerDiv.style.display = 'block';
-    
-    if (btnToggleScanner) {
-        if (titleScanner) titleScanner.textContent = "🔴 Tutup Scanner"; // Ubah teks jadi tombol tutup saat aktif
-        btnToggleScanner.style.borderColor = '#f59e0b'; // Ubah warna border jadi oranye tanda aktif
-    }
+    if (titleScanner) titleScanner.textContent = "🔴 Tutup Scanner";
+    if (btnToggleScanner) btnToggleScanner.style.borderColor = '#f59e0b';
     isScannerActive = true;
 
     if (!html5QrCode) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    // Biarkan fungsi html5QrCode.start(...) di bawahnya tetap seperti kode asli kamu ya!
+    // Jalankan kamera (sesuaikan nama fungsi success/error kamu jika berbeda, misal onScanSuccess)
+    try {
+        await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            onScanSuccess, 
+            onScanFailure
+        );
+    } catch (err) {
+        console.error("Gagal membuka kamera:", err);
+        alert("Tidak dapat mengakses kamera. Pastikan izin kamera diizinkan di browser/HP kamu!");
+        readerDiv.style.display = 'none';
+        if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+        if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
+        isScannerActive = false;
+    }
 }
 
 async function submitPO(e) {
