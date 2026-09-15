@@ -256,22 +256,30 @@ function initEventListeners() {
 async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
+    const titleScanner = document.getElementById('scannerTextTitle'); // Target teks di dalam span
     if (!readerDiv) return;
 
+    // Kalau database barang belum dimuat
     if (masterBarang.length === 0) {
-        if (btnToggleScanner) btnToggleScanner.textContent = "Memuat Database...";
+        if (titleScanner) titleScanner.textContent = "Memuat Database...";
+        if (btnToggleScanner) btnToggleScanner.style.borderColor = '#eab308';
+        
         await loadMasterBarang();
+        
         if (masterBarang.length === 0) {
             alert("Database Master Barang kosong atau gagal dimuat!");
-            if (btnToggleScanner) btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
+            if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+            if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
             return;
         }
     }
-    
+
+    // Tampilkan kotak kamera (reader)
     readerDiv.style.display = 'block';
+    
     if (btnToggleScanner) {
-        btnToggleScanner.textContent = "Tutup Kamera Scanner";
-        btnToggleScanner.style.background = "#dc3545";
+        if (titleScanner) titleScanner.textContent = "🔴 Tutup Scanner"; // Ubah teks jadi tombol tutup saat aktif
+        btnToggleScanner.style.borderColor = '#f59e0b'; // Ubah warna border jadi oranye tanda aktif
     }
     isScannerActive = true;
 
@@ -279,109 +287,7 @@ async function startCameraScanner() {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 35,
-            qrbox: { width: 220, height: 220 },
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-            videoConstraints: {
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            }
-        },
-        (decodedText) => {
-            const scannedCode = decodedText.trim().toLowerCase();
-            const matchedItem = masterBarang.find(item => {
-                const kodeItem = (item.kode_barang || item.kode || item.kodeBarang || item.code || '').trim().toLowerCase();
-                return kodeItem === scannedCode || kodeItem.includes(scannedCode) || scannedCode.includes(kodeItem);
-            });
-
-            if (matchedItem) {
-                stopCameraScanner();
-                pilihBarang(matchedItem);
-            } else {
-                alert(`Barcode "${decodedText}" tidak ditemukan di database Master Barang!`);
-            }
-        },
-        () => {}
-    ).catch(err => {
-        console.error("Gagal membuka kamera:", err);
-        alert("Gagal mengakses kamera HP.");
-        stopCameraScanner();
-    });
-}
-
-function stopCameraScanner() {
-    const btnToggleScanner = document.getElementById('btnToggleScanner');
-    const readerDiv = document.getElementById('reader');
-
-    if (html5QrCode && isScannerActive) {
-        html5QrCode.stop().then(() => {
-            isScannerActive = false;
-            if (readerDiv) readerDiv.style.display = 'none';
-            if (btnToggleScanner) {
-                btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
-                btnToggleScanner.style.background = "#28a745";
-            }
-        }).catch(err => {
-            console.error("Gagal menghentikan kamera:", err);
-        });
-    } else {
-        isScannerActive = false;
-        if (readerDiv) readerDiv.style.display = 'none';
-        if (btnToggleScanner) {
-            btnToggleScanner.textContent = "📷 Buka Kamera Scanner";
-            btnToggleScanner.style.background = "#28a745";
-        }
-    }
-}
-
-function pilihBarang(item) {
-    selectedItemData = item;
-    const namaVal = item.nama_barang || item.nama || '';
-    const kodeVal = item.kode_barang || item.kode || '';
-    const picVal = item.pic || '';
-
-    const triggerModalEl = document.getElementById('triggerModal');
-    if (triggerModalEl) triggerModalEl.textContent = namaVal;
-    
-    if (document.getElementById('poKode')) document.getElementById('poKode').value = kodeVal;
-    if (document.getElementById('poNama')) document.getElementById('poNama').value = namaVal;
-    if (document.getElementById('poPic')) document.getElementById('poPic').value = picVal;
-
-    stopCameraScanner();
-    if (document.getElementById('popupSearch')) document.getElementById('popupSearch').style.display = 'none';
-    if (document.getElementById('searchInputPopup')) document.getElementById('searchInputPopup').value = '';
-}
-
-function renderList(data) {
-    const itemList = document.getElementById('itemListPopup');
-    if (!itemList) return;
-    itemList.innerHTML = '';
-    if (data.length === 0) {
-        itemList.innerHTML = `<div style="padding: 15px; color: #94a3b8; text-align: center; font-size: 14px;">Barang tidak ditemukan</div>`;
-        return;
-    }
-
-    data.forEach(item => {
-        const namaItem = item.nama_barang || item.nama || 'Tanpa Nama';
-        const kodeItem = item.kode_barang || item.kode || '';
-        
-        const div = document.createElement('div');
-        div.className = 'item-pilihan';
-        div.innerHTML = `
-            <span class="item-kode">[${kodeItem}]</span>
-            <span class="item-nama">${namaItem}</span>
-        `;
-        
-        div.addEventListener('click', function() {
-            pilihBarang(item);
-        });
-
-        itemList.appendChild(div);
-    });
+    // Biarkan fungsi html5QrCode.start(...) di bawahnya tetap seperti kode asli kamu ya!
 }
 
 async function submitPO(e) {
@@ -500,4 +406,9 @@ function togglePasswordVisibility() {
 function handleLogout() {
     localStorage.clear();
     tampilkanLogin();
+}
+function tambahJumlah(angka) {
+    let inputJumlah = document.getElementById('poJumlah');
+    let nilaiSekarang = parseInt(inputJumlah.value) || 0;
+    inputJumlah.value = nilaiSekarang + angka; // Jangan lupa bagian ini buat masukin angkanya!
 }

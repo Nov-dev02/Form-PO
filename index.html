@@ -115,12 +115,16 @@
             </div>
             <p class="subtitle">Buat PO barang gudang dengan mudah</p>
 
-            <div class="scanner-section">
-                <p>Pindai barcode menggunakan kamera HP:</p>
-                <button type="button" id="btnToggleScanner" class="btn-scanner">📷 Buka Kamera Scanner</button>
-                <div id="reader" style="display: none; margin-top: 10px; border-radius: 8px; overflow: hidden;"></div>
-            </div>
+          <div class="scanner-section" style="text-align: center; margin-bottom: 15px;">
+    <!-- Tombol Scan Compact ala QRIS -->
+    <div onclick="startCameraScanner()" id="btnToggleScanner" style="display: inline-flex; align-items: center; gap: 10px; background: rgba(30, 41, 59, 0.9); border: 1px solid #10b981; padding: 10px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.3s ease;">
+        <div style="background: rgba(16, 185, 129, 0.2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #10b981;">📷</div>
+        <span id="scannerTextTitle" style="color: #f8fafc; font-weight: 600; font-size: 13px;">Scan QR / Barcode</span>
+    </div>
 
+    <!-- Area Layar Kamera (JANGAN DIHAPUS) -->
+    <div id="reader" style="display: none; margin-top: 10px; border-radius: 8px; overflow: hidden;"></div>
+</div>
             <form id="poForm" onsubmit="submitPO(event)">
                 <div class="form-group">
                     <label>Tanggal</label>
@@ -150,6 +154,12 @@
                 <div class="form-group">
                     <label>Jumlah PO</label>
                     <input type="number" id="poJumlah" min="1" placeholder="Masukkan jumlah" required>
+                    <!-- Tambahan Pintasan Jumlah -->
+<div style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 12px;">
+    <button type="button" onclick="tambahJumlah(50)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+50</button>
+    <button type="button" onclick="tambahJumlah(100)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+100</button>
+    <button type="button" onclick="tambahJumlah(200)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+200</button>
+</div>
                 </div>
 
                 <button type="submit" id="btnSubmit">Kirim PO</button>

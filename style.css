@@ -258,15 +258,6 @@ button:hover {
     margin-bottom: 8px;
 }
 
-.btn-scanner {
-    background: #22c55e;
-    color: #fff;
-    margin-top: 0;
-}
-
-.btn-scanner:hover {
-    background: #16a34a;
-}
 
 .btn-modal-trigger {
     background: #1e293b;
@@ -420,25 +411,7 @@ input[readonly] {
     75% { content: '...'; }
 }
 
-/* SCANNER BUTTON */
-#btnToggleScanner {
-    width: 100% !important;
-    padding: 14px 20px !important;
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-    transition: all 0.3s ease !important;
-    margin-bottom: 15px !important;
-}
+
 
 #btnToggleScanner:hover {
     transform: translateY(-2px) !important;
