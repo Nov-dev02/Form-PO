@@ -318,7 +318,7 @@ async function startCameraScanner() {
         console.error("Gagal membuka kamera:", err);
         alert("Tidak dapat mengakses kamera: " + (err.message || err));
         readerDiv.style.display = 'none';
-        if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+        if (titleScanner) titleScanner.textContent = "Scan QR";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
         isScannerActive = false;
     }
@@ -341,7 +341,7 @@ async function stopCameraScanner() {
     }
 
     if (readerDiv) readerDiv.style.display = 'none';
-    if (titleScanner) titleScanner.textContent = "Scan QR / Barcode";
+    if (titleScanner) titleScanner.textContent = "Scan QR";
     if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
     isScannerActive = false;
 }
