@@ -116,9 +116,19 @@
             <p class="subtitle">Buat PO barang gudang dengan mudah</p>
 
           <div class="scanner-section" style="text-align: center; margin-bottom: 15px;">
-    <!-- Tombol Scan Compact ala QRIS (Atribut onclick dihapus agar diatur sepenuhnya oleh script.js) -->
+    <!-- Tombol Scan dengan Ikon QR Code Baru -->
     <div id="btnToggleScanner" style="display: inline-flex; align-items: center; gap: 10px; background: rgba(30, 41, 59, 0.9); border: 1px solid #10b981; padding: 10px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.3s ease;">
-        <div style="background: rgba(16, 185, 129, 0.2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #10b981;">📷</div>
+        <div style="background: rgba(16, 185, 129, 0.2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #10b981;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#10b981">
+                <path d="M2 2h8v8H2V2zm2 2v4h4V4H4z"/>
+                <path d="M5 5h2v2H5z"/>
+                <path d="M14 2h8v8h-8V2zm2 2v4h4V4h-4z"/>
+                <path d="M17 5h2v2h-2z"/>
+                <path d="M2 14h8v8H2v-8zm2 2v4h4v-4H4z"/>
+                <path d="M5 17h2v2H5z"/>
+                <path d="M14 14h3v3h-3v-3zm5 0h3v3h-3v-3zm0 5h3v3h-3v-3zm-5 2h2v2h-2v-2z"/>
+            </svg>
+        </div>
         <span id="scannerTextTitle" style="color: #f8fafc; font-weight: 600; font-size: 13px;">Scan QR / Barcode</span>
     </div>
 
@@ -158,7 +168,7 @@
                     <div style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 12px;">
                         <button type="button" onclick="tambahJumlah(50)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+50</button>
                         <button type="button" onclick="tambahJumlah(100)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+100</button>
-                        <button type="button" onclick="tambahJumlah(200)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+200</button>
+                        <button type="button" onclick="tambahJSON()" onclick="tambahJumlah(200)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+200</button>
                     </div>
                 </div>
 
@@ -188,5 +198,4 @@
 
     <script src="script.js"></script>
 </body>
-    </html>
-    
+</html>
