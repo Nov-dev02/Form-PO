@@ -13,6 +13,48 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
+// Injeksi Styling Tombol & Spinner Modern secara Otomatis
+function injectModernStyles() {
+    if (document.getElementById('modernCustomStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'modernCustomStyles';
+    style.innerHTML = `
+        #btnLogin, #btnSubmit {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+        }
+        #btnLogin:hover:not(:disabled), #btnSubmit:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+        }
+        #btnLogin:active:not(:disabled), #btnSubmit:active:not(:disabled) {
+            transform: translateY(0) !important;
+        }
+        .modern-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spinBtn 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spinBtn {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // Fungsi Jam Real-Time
 function updateRealTimeClock() {
     const now = new Date();
@@ -73,6 +115,8 @@ function setDynamicGreeting(username) {
 
 window.onload = function() {
     updateRealTimeClock();
+    injectModernStyles();
+    
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
     if (poTanggal) poTanggal.value = today;
@@ -89,7 +133,7 @@ window.onload = function() {
 
     initRobotAnimation();
     initEventListeners();
-    checkFormValidity(); // Cek status tombol saat pertama buka
+    checkFormValidity();
 };
 
 function tampilkanLogin() {
@@ -119,7 +163,10 @@ async function handleLogin() {
     const pass = passwordInput ? passwordInput.value.trim() : '';
 
     if (!user || !pass) {
-        if (errDiv) errDiv.innerText = "Username dan password wajib diisi!";
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.innerText = "Username dan password wajib diisi!";
+        }
         return;
     }
 
@@ -129,11 +176,12 @@ async function handleLogin() {
         btnLogin.style.opacity = "0.7";
     }
 
-    const spinner = `<span class="spinner"></span>`;
-    const dots = `<span class="dots"></span>`;
-
     try {
-        if (btnLogin) btnLogin.innerHTML = `${spinner} Menghubungkan ke server${dots}`;
+        if (btnLogin) btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
+        if (errDiv) {
+            errDiv.style.color = "#38bdf8";
+            errDiv.innerText = "Menghubungkan ke server...";
+        }
         
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
@@ -146,8 +194,11 @@ async function handleLogin() {
         const result = await response.json();
 
         if (result.status === 'success') {
-            if (btnLogin) btnLogin.innerHTML = `🚀 Akses diterima! Membuka sistem${dots}`;
-            await new Promise(resolve => setTimeout(resolve, 700));
+            if (errDiv) {
+                errDiv.style.color = "#10b981";
+                errDiv.innerText = "Akses diterima! Membuka sistem...";
+            }
+            await new Promise(resolve => setTimeout(resolve, 600));
 
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
@@ -158,6 +209,7 @@ async function handleLogin() {
                 btnLogin.disabled = false;
                 btnLogin.style.opacity = "1";
             }
+            if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
         } else {
             if (btnLogin) {
@@ -165,7 +217,10 @@ async function handleLogin() {
                 btnLogin.disabled = false;
                 btnLogin.style.opacity = "1";
             }
-            if (errDiv) errDiv.innerText = result.message || "Username atau password salah!";
+            if (errDiv) {
+                errDiv.style.color = "#ef4444";
+                errDiv.innerText = result.message || "Username atau password salah!";
+            }
         }
     } catch (err) {
         if (btnLogin) {
@@ -173,12 +228,15 @@ async function handleLogin() {
             btnLogin.disabled = false;
             btnLogin.style.opacity = "1";
         }
-        if (errDiv) errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.innerText = "Gagal terhubung ke server Apps Script!";
+        }
         console.error(err);
     }
 }
 
-// Fungsi Load Master Barang dari Google Sheets
+// Fungsi Load Master Barang dari Google Sheets (Dibuat Lebih Tangguh)
 async function loadMasterBarang() {
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -186,38 +244,62 @@ async function loadMasterBarang() {
             body: JSON.stringify({ action: 'getBarang' })
         });
         const result = await response.json();
-        if (result.status === 'success') {
+        if (result.status === 'success' && Array.isArray(result.data)) {
             masterBarang = result.data;
             console.log("Master barang berhasil dimuat:", masterBarang.length, "item");
         } else {
-            console.warn("Gagal load master barang:", result.message);
+            console.warn("Gagal load master barang / data kosong:", result);
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
     }
 }
 
-// Render daftar barang ke dalam modal pop-up
+// Render daftar barang ke dalam modal pop-up dengan Handler Aman
 function renderList(data) {
     const container = document.getElementById('itemListPopup');
     if (!container) return;
 
     if (!data || data.length === 0) {
-        container.innerHTML = `<div style="padding: 15px; text-align: center; color: #94a3b8; font-size: 13px;">Tidak ada barang ditemukan</div>`;
+        container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                Tidak ada barang ditemukan atau data belum termuat.<br>
+                <button onclick="muatUlangMasterBarangManual()" style="margin-top: 10px; padding: 6px 14px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Muat Ulang Data</button>
+            </div>`;
         return;
     }
 
     container.innerHTML = data.map(item => {
-        const kode = item.kode_barang || item.kode || '-';
-        const nama = item.nama_barang || item.nama || '-';
-        const pic = item.pic || '-';
+        let kode = '-', nama = '-', pic = '-';
+        if (Array.isArray(item)) {
+            kode = item[0] || '-';
+            nama = item[1] || '-';
+            pic = item[2] || '-';
+        } else if (typeof item === 'object' && item !== null) {
+            kode = item.kode_barang || item.kode || item.code || '-';
+            nama = item.nama_barang || item.nama || item.name || '-';
+            pic = item.pic || item.penanggung_jawab || '-';
+        }
         return `
-            <div class="item-pilihan" onclick="pilihBarang('${kode}', '${nama}', '${pic}')">
+            <div class="item-pilihan" onclick="pilihBarang('${escapeHtml(kode)}', '${escapeHtml(nama)}', '${escapeHtml(pic)}')">
                 <span class="item-kode">${kode}</span>
                 <span class="item-nama">${nama} (${pic})</span>
             </div>
         `;
     }).join('');
+}
+
+function escapeHtml(text) {
+    return String(text).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+async function muatUlangMasterBarangManual() {
+    const container = document.getElementById('itemListPopup');
+    if (container) {
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #38bdf8; font-size: 13px;"><span class="modern-spinner"></span> Sedang memuat data dari server...</div>`;
+    }
+    await loadMasterBarang();
+    renderList(masterBarang);
 }
 
 function pilihBarang(kode, nama, pic) {
@@ -227,11 +309,8 @@ function pilihBarang(kode, nama, pic) {
     document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
     document.getElementById('popupSearch').style.display = 'none';
     stopCameraScanner();
-
-    // Validasi form otomatis aktif setelah barang dipilih
     checkFormValidity();
 
-    // Auto-scroll halus ke bawah (area jumlah / tombol kirim)
     setTimeout(() => {
         const submitBtn = document.querySelector('#poSection button[type="submit"]');
         if (submitBtn) {
@@ -249,9 +328,15 @@ function initEventListeners() {
     const poJumlahInput = document.getElementById('poJumlah');
 
     if (triggerModal) {
-        triggerModal.addEventListener('click', function() {
+        triggerModal.addEventListener('click', async function() {
             if (popupSearch) popupSearch.style.display = 'flex';
             if (searchInput) searchInput.value = '';
+            
+            // Jika data kosong saat diklik, coba fetch ulang otomatis
+            if (!masterBarang || masterBarang.length === 0) {
+                renderList([{ kode_barang: '', nama_barang: 'Memuat data dari server...', pic: '' }]);
+                await loadMasterBarang();
+            }
             renderList(masterBarang);
             if (searchInput) searchInput.focus();
         });
@@ -288,15 +373,20 @@ function initEventListeners() {
         searchInput.addEventListener('input', function() {
             const keyword = this.value.toLowerCase().trim();
             const filtered = masterBarang.filter(item => {
-                const namaItem = item.nama_barang || item.nama || '';
-                const kodeItem = item.kode_barang || item.kode || '';
+                let namaItem = '', kodeItem = '';
+                if (Array.isArray(item)) {
+                    kodeItem = (item[0] || '').toString();
+                    namaItem = (item[1] || '').toString();
+                } else if (typeof item === 'object' && item !== null) {
+                    kodeItem = (item.kode_barang || item.kode || item.code || '').toString();
+                    namaItem = (item.nama_barang || item.nama || item.name || '').toString();
+                }
                 return namaItem.toLowerCase().includes(keyword) || kodeItem.toLowerCase().includes(keyword);
             });
             renderList(filtered);
         });
     }
 
-    // Pantau input jumlah PO secara real-time
     if (poJumlahInput) {
         poJumlahInput.addEventListener('input', function() {
             checkFormValidity();
@@ -304,7 +394,6 @@ function initEventListeners() {
     }
 }
 
-// Fungsi Validasi Tombol Kirim PO (Poin 4)
 function checkFormValidity() {
     const kode = document.getElementById('poKode') ? document.getElementById('poKode').value.trim() : '';
     const jumlah = document.getElementById('poJumlah') ? document.getElementById('poJumlah').value.trim() : '';
@@ -316,54 +405,13 @@ function checkFormValidity() {
         btnSubmit.disabled = false;
         btnSubmit.style.opacity = "1";
         btnSubmit.style.cursor = "pointer";
-        btnSubmit.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
     } else {
         btnSubmit.disabled = true;
         btnSubmit.style.opacity = "0.4";
         btnSubmit.style.cursor = "not-allowed";
-        btnSubmit.style.boxShadow = "none";
     }
 }
 
-// Fungsi Toast Notification Modern (Poin 1 - Pengganti alert biasa yang lebih keren)
-function showToast(message, type = 'success') {
-    const existingToast = document.getElementById('customToast');
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement('div');
-    toast.id = 'customToast';
-    toast.textContent = message;
-    
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%) translateY(-20px)';
-    toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
-    toast.style.color = '#fff';
-    toast.style.padding = '12px 24px';
-    toast.style.borderRadius = '8px';
-    toast.style.fontSize = '14px';
-    toast.style.fontWeight = '600';
-    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
-    toast.style.zIndex = '99999';
-    toast.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
-    toast.style.opacity = '0';
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(0)';
-        toast.style.opacity = '1';
-    }, 10);
-
-    setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(-20px)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
-}
-
-// Fungsi Standalone Tombol Kamera (Aman dari error scan ongoing)
 async function startCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
@@ -395,7 +443,7 @@ async function startCameraScanner() {
         );
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
-        showToast("Tidak dapat mengakses kamera: " + (err.message || err), "error");
+        alert("Tidak dapat mengakses kamera: " + (err.message || err));
         readerDiv.style.display = 'none';
         if (titleScanner) titleScanner.textContent = "Scan QR";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
@@ -403,7 +451,6 @@ async function startCameraScanner() {
     }
 }
 
-// Fungsi Stop Kamera (Aman)
 async function stopCameraScanner() {
     const readerDiv = document.getElementById('reader');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
@@ -425,30 +472,35 @@ async function stopCameraScanner() {
     isScannerActive = false;
 }
 
-// Callback ketika Barcode/QR berhasil dibaca
 function onScanSuccess(decodedText, decodedResult) {
     console.log(`Scan berhasil: ${decodedText}`);
     
     const found = masterBarang.find(item => {
-        const kode = (item.kode_barang || item.kode || '').toString().trim().toLowerCase();
-        const nama = (item.nama_barang || item.nama || '').toString().trim().toLowerCase();
+        let kode = '', nama = '';
+        if (Array.isArray(item)) {
+            kode = (item[0] || '').toString().trim().toLowerCase();
+            nama = (item[1] || '').toString().trim().toLowerCase();
+        } else if (typeof item === 'object' && item !== null) {
+            kode = (item.kode_barang || item.kode || item.code || '').toString().trim().toLowerCase();
+            nama = (item.nama_barang || item.nama || item.name || '').toString().trim().toLowerCase();
+        }
         const scan = decodedText.trim().toLowerCase();
         return kode === scan || nama.includes(scan);
     });
 
     if (found) {
-        const kode = found.kode_barang || found.kode || '';
-        const nama = found.nama_barang || found.nama || '';
-        const pic = found.pic || '';
+        let kode = Array.isArray(found) ? found[0] : (found.kode_barang || found.kode || found.code || '');
+        let nama = Array.isArray(found) ? found[1] : (found.nama_barang || found.nama || found.name || '');
+        let pic = Array.isArray(found) ? found[2] : (found.pic || found.penanggung_jawab || '');
         
         pilihBarang(kode, nama, pic);
-        showToast(`Berhasil memilih barang: ${nama}`);
+        alert(`Berhasil memilih barang: ${nama}`);
     } else {
         document.getElementById('poKode').value = decodedText;
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
-        showToast(`Kode terdeteksi: ${decodedText} (Manual)`, "success");
+        alert(`Kode terdeteksi: ${decodedText} (Tidak ada di master barang, kode dimasukkan manual)`);
 
         setTimeout(() => {
             const submitBtn = document.querySelector('#poSection button[type="submit"]');
@@ -467,17 +519,19 @@ async function submitPO(e) {
     if (e) e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
-    
-    const spinner = `<span class="spinner"></span>`;
-    const dots = `<span class="dots"></span>`;
 
     if (btn) {
         btn.disabled = true;
         btn.style.opacity = "0.7";
-        btn.innerHTML = `${spinner} Mengirim PO${dots}`;
+        btn.innerHTML = `<span class="modern-spinner"></span>Mengirim...`;
     }
 
-    const dataPO = {
+    if (msg) {
+        msg.style.color = "#38bdf8";
+        msg.innerText = "Mengirim data PO ke Google Sheets...";
+    }
+
+   const dataPO = {
         action: 'submitPO',
         tanggal: document.getElementById('poTanggal') ? document.getElementById('poTanggal').value : '',
         kodeBarang: document.getElementById('poKode') ? document.getElementById('poKode').value : '',
@@ -494,11 +548,15 @@ async function submitPO(e) {
         });
 
         if (btn) {
-            btn.innerHTML = `✨ Berhasil Dikirim!`;
+            btn.innerHTML = `✨ Berhasil!`;
             btn.style.backgroundColor = "#10b981";
         }
         
-        showToast("Data PO Berhasil Disimpan di Google Sheets!");
+        if (msg) {
+            msg.style.color = "#10b981";
+            msg.innerText = "Data PO Berhasil Disimpan di Google Sheets!";
+        }
+
         await new Promise(resolve => setTimeout(resolve, 800));
 
         if (document.getElementById('poForm')) document.getElementById('poForm').reset();
@@ -509,55 +567,54 @@ async function submitPO(e) {
         if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
         if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
         
-        setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
+        setTimeout(() => { 
+            if (msg) msg.innerText = ""; 
+        }, 3000);
 
     } catch (err) {
         console.error("Gagal mengirim:", err);
-        showToast("Terjadi kendala koneksi internet!", "error");
+        if (msg) {
+            msg.style.color = "#ef4444";
+            msg.innerText = "Terjadi kendala koneksi internet!";
+        }
     } finally {
         if (btn) {
             btn.innerHTML = "Kirim PO";
-            btn.style.backgroundColor = ""; // Kembali ke warna awal CSS
+            btn.style.backgroundColor = ""; 
         }
-        checkFormValidity(); // Periksa kembali status tombol setelah reset
+        checkFormValidity();
     }
 }
 
+// Inisialisasi Animasi Robot
 function initRobotAnimation() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const robotContainer = document.getElementById('robotContainer');
     const robotBubble = document.getElementById('robotBubble');
 
-    if (usernameInput && passwordInput && robotContainer && robotBubble) {
-        usernameInput.addEventListener('focus', function() {
-            robotContainer.classList.remove('password-active');
-            robotBubble.textContent = "Halo! Masukkan username kamu ya 👤";
-        });
+    if (!usernameInput || !passwordInput || !robotContainer || !robotBubble) return;
 
-        passwordInput.addEventListener('focus', function() {
-            robotContainer.classList.add('password-active');
-            robotBubble.textContent = "Waduh, password rahasia! Aku tutup mata ya 🙈";
-        });
-
-        usernameInput.addEventListener('blur', function() {
-            setTimeout(() => {
-                if (document.activeElement !== passwordInput && document.activeElement !== usernameInput) {
-                    robotContainer.classList.remove('password-active');
-                    robotBubble.textContent = "Masukkan akun internal gudang";
-                }
-            }, 100);
-        });
-
-        passwordInput.addEventListener('blur', function() {
-            setTimeout(() => {
-                if (document.activeElement !== passwordInput && document.activeElement !== usernameInput) {
-                    robotContainer.classList.remove('password-active');
-                    robotBubble.textContent = "Masukkan akun internal gudang";
-                }
-            }, 100);
-        });
+    function updateRobotState() {
+        setTimeout(() => {
+            const activeEl = document.activeElement;
+            if (activeEl === usernameInput) {
+                robotContainer.classList.remove('password-active');
+                robotBubble.textContent = "Halo! Masukkan username kamu ya 👤";
+            } else if (activeEl === passwordInput) {
+                robotContainer.classList.add('password-active');
+                robotBubble.textContent = "Waduh, password rahasia! Aku tutup mata ya 🙈";
+            } else {
+                robotContainer.classList.remove('password-active');
+                robotBubble.textContent = "Masukkan akun internal gudang";
+            }
+        }, 50);
     }
+
+    usernameInput.addEventListener('focus', updateRobotState);
+    usernameInput.addEventListener('blur', updateRobotState);
+    passwordInput.addEventListener('focus', updateRobotState);
+    passwordInput.addEventListener('blur', updateRobotState);
 }
 
 function togglePasswordVisibility() {
@@ -589,5 +646,5 @@ function tambahJumlah(angka) {
     let inputJumlah = document.getElementById('poJumlah');
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
     inputJumlah.value = nilaiSekarang + angka;
-    checkFormValidity(); // Perbarui validasi tombol saat tombol shortcut ditekan
+    checkFormValidity();
 }
