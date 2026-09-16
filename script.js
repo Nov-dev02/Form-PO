@@ -89,6 +89,7 @@ window.onload = function() {
 
     initRobotAnimation();
     initEventListeners();
+    checkFormValidity(); // Cek status tombol saat pertama buka
 };
 
 function tampilkanLogin() {
@@ -227,7 +228,10 @@ function pilihBarang(kode, nama, pic) {
     document.getElementById('popupSearch').style.display = 'none';
     stopCameraScanner();
 
-    // 🚀 TAMBAHAN: Auto-scroll halus ke bawah (area jumlah / tombol kirim)
+    // Validasi form otomatis aktif setelah barang dipilih
+    checkFormValidity();
+
+    // Auto-scroll halus ke bawah (area jumlah / tombol kirim)
     setTimeout(() => {
         const submitBtn = document.querySelector('#poSection button[type="submit"]');
         if (submitBtn) {
@@ -242,6 +246,7 @@ function initEventListeners() {
     const searchInput = document.getElementById('searchInputPopup');
     const btnCloseModal = document.getElementById('btnCloseModal');
     const btnToggleScanner = document.getElementById('btnToggleScanner');
+    const poJumlahInput = document.getElementById('poJumlah');
 
     if (triggerModal) {
         triggerModal.addEventListener('click', function() {
@@ -290,6 +295,72 @@ function initEventListeners() {
             renderList(filtered);
         });
     }
+
+    // Pantau input jumlah PO secara real-time
+    if (poJumlahInput) {
+        poJumlahInput.addEventListener('input', function() {
+            checkFormValidity();
+        });
+    }
+}
+
+// Fungsi Validasi Tombol Kirim PO (Poin 4)
+function checkFormValidity() {
+    const kode = document.getElementById('poKode') ? document.getElementById('poKode').value.trim() : '';
+    const jumlah = document.getElementById('poJumlah') ? document.getElementById('poJumlah').value.trim() : '';
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    if (!btnSubmit) return;
+
+    if (kode && kode !== "" && jumlah !== "" && parseInt(jumlah) > 0) {
+        btnSubmit.disabled = false;
+        btnSubmit.style.opacity = "1";
+        btnSubmit.style.cursor = "pointer";
+        btnSubmit.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+    } else {
+        btnSubmit.disabled = true;
+        btnSubmit.style.opacity = "0.4";
+        btnSubmit.style.cursor = "not-allowed";
+        btnSubmit.style.boxShadow = "none";
+    }
+}
+
+// Fungsi Toast Notification Modern (Poin 1 - Pengganti alert biasa yang lebih keren)
+function showToast(message, type = 'success') {
+    const existingToast = document.getElementById('customToast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'customToast';
+    toast.textContent = message;
+    
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%) translateY(-20px)';
+    toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.style.color = '#fff';
+    toast.style.padding = '12px 24px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontSize = '14px';
+    toast.style.fontWeight = '600';
+    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
+    toast.style.zIndex = '99999';
+    toast.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+    toast.style.opacity = '0';
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        toast.style.opacity = '1';
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
 
 // Fungsi Standalone Tombol Kamera (Aman dari error scan ongoing)
@@ -324,7 +395,7 @@ async function startCameraScanner() {
         );
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
-        alert("Tidak dapat mengakses kamera: " + (err.message || err));
+        showToast("Tidak dapat mengakses kamera: " + (err.message || err), "error");
         readerDiv.style.display = 'none';
         if (titleScanner) titleScanner.textContent = "Scan QR";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
@@ -370,17 +441,15 @@ function onScanSuccess(decodedText, decodedResult) {
         const nama = found.nama_barang || found.nama || '';
         const pic = found.pic || '';
         
-        // Memanggil pilihBarang agar form terisi, modal tertutup, dan otomatis auto-scroll
         pilihBarang(kode, nama, pic);
-        
-        alert(`Berhasil memilih barang: ${nama}`);
+        showToast(`Berhasil memilih barang: ${nama}`);
     } else {
         document.getElementById('poKode').value = decodedText;
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
-        alert(`Kode terdeteksi: ${decodedText} (Tidak ada di master barang, kode dimasukkan manual)`);
+        checkFormValidity();
+        showToast(`Kode terdeteksi: ${decodedText} (Manual)`, "success");
 
-        // 🚀 TAMBAHAN: Auto-scroll juga untuk kode manual hasil scan
         setTimeout(() => {
             const submitBtn = document.querySelector('#poSection button[type="submit"]');
             if (submitBtn) {
@@ -424,10 +493,14 @@ async function submitPO(e) {
             body: JSON.stringify(dataPO)
         });
 
-        if (btn) btn.innerHTML = `✅ Berhasil Dikirim!`;
-        await new Promise(resolve => setTimeout(resolve, 600));
+        if (btn) {
+            btn.innerHTML = `✨ Berhasil Dikirim!`;
+            btn.style.backgroundColor = "#10b981";
+        }
+        
+        showToast("Data PO Berhasil Disimpan di Google Sheets!");
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        if (msg) msg.innerText = "Data PO Berhasil Disimpan di Google Sheets!";
         if (document.getElementById('poForm')) document.getElementById('poForm').reset();
         
         if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
@@ -440,13 +513,13 @@ async function submitPO(e) {
 
     } catch (err) {
         console.error("Gagal mengirim:", err);
-        alert("Terjadi kendala koneksi internet!");
+        showToast("Terjadi kendala koneksi internet!", "error");
     } finally {
         if (btn) {
             btn.innerHTML = "Kirim PO";
-            btn.disabled = false;
-            btn.style.opacity = "1";
+            btn.style.backgroundColor = ""; // Kembali ke warna awal CSS
         }
+        checkFormValidity(); // Periksa kembali status tombol setelah reset
     }
 }
 
@@ -516,4 +589,5 @@ function tambahJumlah(angka) {
     let inputJumlah = document.getElementById('poJumlah');
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
     inputJumlah.value = nilaiSekarang + angka;
+    checkFormValidity(); // Perbarui validasi tombol saat tombol shortcut ditekan
 }
