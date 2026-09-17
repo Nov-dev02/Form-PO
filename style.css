@@ -205,6 +205,25 @@ button:hover {
     background: #0ea5e9;
 }
 
+/* [FITUR BARU] Styling Tombol Riwayat PO */
+.btn-riwayat {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.btn-riwayat:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .error-msg {
     color: #ef4444;
     font-size: 13px;
@@ -257,7 +276,6 @@ button:hover {
     color: #94a3b8;
     margin-bottom: 8px;
 }
-
 
 .btn-modal-trigger {
     background: #1e293b;
@@ -410,8 +428,6 @@ input[readonly] {
     50% { content: '..'; }
     75% { content: '...'; }
 }
-
-
 
 #btnToggleScanner:hover {
     transform: translateY(-2px) !important;

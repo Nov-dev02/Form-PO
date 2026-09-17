@@ -172,11 +172,17 @@
                     <div style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 12px;">
                         <button type="button" onclick="tambahJumlah(50)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+50</button>
                         <button type="button" onclick="tambahJumlah(100)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+100</button>
-                        <button type="button" onclick="tambahJSON()" onclick="tambahJumlah(200)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+200</button>
+                        <button type="button" onclick="tambahJumlah(200)" style="flex:1; padding: 6px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer;">+200</button>
                     </div>
                 </div>
 
                 <button type="submit" id="btnSubmit">Kirim</button>
+                
+                <!-- [FITUR BARU] Tombol Lihat Riwayat PO di bawah Kirim -->
+                <button type="button" class="btn-riwayat" onclick="openRiwayatModal()">
+                    📂 Lihat Riwayat PO
+                </button>
+
                 <div id="poMessage" class="success-msg"></div>
             </form>
         </div>
@@ -192,6 +198,37 @@
             <input type="text" id="searchInputPopup" class="search-input-modal" placeholder="Ketik nama atau kode barang..." autocomplete="off">
             <div id="itemListPopup" class="item-list-container">
                 <!-- Daftar item muncul via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- [FITUR BARU] Modal Pop-up Riwayat PO -->
+    <div id="riwayatModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 650px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 16px; color: #f8fafc; margin: 0;">Riwayat Data Form PO</h3>
+                <button type="button" class="btn-close-modal" onclick="closeRiwayatModal()">&times;</button>
+            </div>
+            <div style="max-height: 380px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
+                <table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.06); color: #fff; position: sticky; top: 0; z-index: 2;">
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Tanggal</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Kode Barang</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Nama Barang</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">PIC</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: right;">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalRiwayatTableBody">
+                        <tr>
+                            <td colspan="5" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 14px; text-align: right;">
+                <button type="button" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Tutup</button>
             </div>
         </div>
     </div>
