@@ -210,22 +210,24 @@
                 <button type="button" class="btn-close-modal" onclick="closeRiwayatModal()">&times;</button>
             </div>
             <div style="max-height: 380px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
-                <table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
-                    <thead>
-                        <tr style="background: rgba(255,255,255,0.06); color: #fff; position: sticky; top: 0; z-index: 2;">
-                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Tanggal</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Kode Barang</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Nama Barang</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #334155;">PIC</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: right;">Jumlah</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modalRiwayatTableBody">
-                        <tr>
-                            <td colspan="5" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Bagian dalam Modal Riwayat PO (index.html) -->
+<table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
+    <thead>
+        <tr style="background: rgba(255,255,255,0.06); color: #fff; position: sticky; top: 0; z-index: 2;">
+            <th style="padding: 10px; border-bottom: 1px solid #334155;">Tanggal</th>
+            <th style="padding: 10px; border-bottom: 1px solid #334155;">Kode Barang</th>
+            <th style="padding: 10px; border-bottom: 1px solid #334155;">Nama Barang</th>
+            <th style="padding: 10px; border-bottom: 1px solid #334155;">PIC</th>
+            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: right;">Jumlah</th>
+            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: center;">Aksi</th> <!-- Kolom Baru -->
+        </tr>
+    </thead>
+    <tbody id="modalRiwayatTableBody">
+        <tr>
+            <td colspan="6" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
+        </tr>
+    </tbody>
+</table>
             </div>
             <div style="margin-top: 14px; text-align: right;">
                 <button type="button" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Tutup</button>
