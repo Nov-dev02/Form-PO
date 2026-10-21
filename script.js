@@ -1,7 +1,7 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
 
 let masterBarang = [];
-let selectedItemData = null;
+let currentEditRowIndex = null; // Penanda baris jika sedang mode edit
 let html5QrCode = null;
 let isScannerActive = false;
 
@@ -236,7 +236,6 @@ async function handleLogin() {
     }
 }
 
-// Fungsi Load Master Barang dari Google Sheets
 async function loadMasterBarang() {
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -246,16 +245,12 @@ async function loadMasterBarang() {
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
             masterBarang = result.data;
-            console.log("Master barang berhasil dimuat:", masterBarang.length, "item");
-        } else {
-            console.warn("Gagal load master barang / data kosong:", result);
         }
     } catch (error) {
         console.error("Gagal mengambil data dari Google Sheets:", error);
     }
 }
 
-// Render daftar barang ke dalam modal pop-up
 function renderList(data) {
     const container = document.getElementById('itemListPopup');
     if (!container) return;
@@ -263,7 +258,7 @@ function renderList(data) {
     if (!data || data.length === 0) {
         container.innerHTML = `
             <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
-                Tidak ada barang ditemukan atau data belum termuat.<br>
+                Tidak ada barang ditemukan.<br>
                 <button onclick="muatUlangMasterBarangManual()" style="margin-top: 10px; padding: 6px 14px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Muat Ulang Data</button>
             </div>`;
         return;
@@ -296,7 +291,7 @@ function escapeHtml(text) {
 async function muatUlangMasterBarangManual() {
     const container = document.getElementById('itemListPopup');
     if (container) {
-        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #38bdf8; font-size: 13px;"><span class="modern-spinner"></span> Sedang memuat data dari server...</div>`;
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #38bdf8; font-size: 13px;"><span class="modern-spinner"></span> Memuat data...</div>`;
     }
     await loadMasterBarang();
     renderList(masterBarang);
@@ -318,8 +313,7 @@ function pilihBarang(kode, nama, pic) {
         }
     }, 150);
 }
-
-// --- [FITUR BARU] SCRIPT UNTUK RIWAYAT FORM PO ---
+// --- FITUR RIWAYAT, EDIT, & HAPUS PO ---
 function openRiwayatModal() {
     const modal = document.getElementById('riwayatModal');
     if (modal) modal.style.display = 'flex';
@@ -335,7 +329,7 @@ async function loadRiwayatPOData() {
     const tbody = document.getElementById('modalRiwayatTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = `<tr><td colspan="5" style="padding: 25px; text-align: center; color: #38bdf8;"><span class="modern-spinner"></span> Memuat seluruh riwayat PO...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="padding: 25px; text-align: center; color: #38bdf8;"><span class="modern-spinner"></span> Memuat seluruh riwayat PO...</td></tr>`;
 
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -346,73 +340,117 @@ async function loadRiwayatPOData() {
 
         if (result.status === 'success' && Array.isArray(result.data)) {
             const rows = result.data;
-            if (rows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #888;">Belum ada data PO di spreadsheet.</td></tr>`;
+            if (rows.length <= 1) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #888;">Belum ada data PO di spreadsheet.</td></tr>`;
                 return;
             }
 
-            // Baris pertama adalah Header, data aktual mulai baris ke-2 (.slice(1)).
-            // Di-reverse() supaya PO terbaru muncul di paling atas.
-            const dataRows = rows.slice(1).reverse();
-
-            if (dataRows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #888;">Belum ada data PO.</td></tr>`;
-                return;
+            let formattedRows = [];
+            for (let i = 1; i < rows.length; i++) {
+                formattedRows.push({
+                    rowIndex: i + 1, // Nomor baris asli di spreadsheet
+                    tanggal: rows[i][0] || '',
+                    kode: rows[i][1] || '',
+                    nama: rows[i][2] || '',
+                    pic: rows[i][3] || '-',
+                    jumlah: rows[i][4] || '0'
+                });
             }
 
-            tbody.innerHTML = dataRows.map(row => {
-                let tanggal = '', kode = '', nama = '', pic = '-', jumlah = '0';
-                
-                // Menyesuaikan struktur kolom sheet Form PO
-                if (row.length >= 6) {
-                    tanggal = row[1] || '';
-                    kode = row[2] || '';
-                    nama = row[3] || '';
-                    pic = row[4] || '-';
-                    jumlah = row[5] || '0';
-                } else if (row.length >= 5) {
-                    tanggal = row[0] || '';
-                    kode = row[1] || '';
-                    nama = row[2] || '';
-                    pic = row[3] || '-';
-                    jumlah = row[4] || '0';
-                } else {
-                    tanggal = row[0] || '';
-                    kode = row[1] || '';
-                    nama = row[2] || '';
-                }
+            formattedRows.reverse();
 
-                // Format tanggal jika objek Date atau string
-                if (tanggal) {
+            tbody.innerHTML = formattedRows.map(item => {
+                let tanggalStr = item.tanggal;
+                if (tanggalStr) {
                     try {
-                        const d = new Date(tanggal);
+                        const d = new Date(tanggalStr);
                         if (!isNaN(d.getTime())) {
-                            tanggal = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            tanggalStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
                         }
                     } catch(e) {}
                 }
 
                 return `
                     <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${tanggal}</td>
-                        <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${kode}</td>
-                        <td style="padding: 10px; color: #f8fafc;">${nama}</td>
-                        <td style="padding: 10px; color: #cbd5e1;">${pic}</td>
-                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${jumlah}</td>
+                        <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${tanggalStr}</td>
+                        <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${item.kode}</td>
+                        <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
+                        <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
+                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
+                        <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fas fa-edit"></i> Edit</button>
+                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fas fa-trash"></i> Hapus</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
 
         } else {
-            tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data dari spreadsheet.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data dari spreadsheet.</td></tr>`;
         }
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
     }
 }
-// --- AKHIR FITUR RIWAYAT PO ---
 
+function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
+    currentEditRowIndex = rowIndex;
+    
+    if (tanggal) {
+        try {
+            const d = new Date(tanggal);
+            if (!isNaN(d.getTime())) {
+                document.getElementById('poTanggal').value = d.toISOString().split('T')[0];
+            }
+        } catch(e) {
+            document.getElementById('poTanggal').value = getLocalDateString();
+        }
+    }
+    
+    document.getElementById('poKode').value = kode;
+    document.getElementById('poNama').value = nama;
+    document.getElementById('poPic').value = pic;
+    document.getElementById('poJumlah').value = jumlah;
+    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
+    
+    const btnSubmit = document.getElementById('btnSubmit');
+    if (btnSubmit) {
+        btnSubmit.innerHTML = "💾 Update Data PO";
+        btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+    }
+
+    closeRiwayatModal();
+    checkFormValidity();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function hapusDataPO(rowIndex) {
+    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deletePO',
+                rowIndex: rowIndex
+            })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert("Data PO berhasil dihapus!");
+            loadRiwayatPOData();
+        } else {
+            alert("Gagal menghapus data: " + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi saat menghapus data.");
+    }
+}
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
@@ -566,8 +604,6 @@ async function stopCameraScanner() {
 }
 
 function onScanSuccess(decodedText, decodedResult) {
-    console.log(`Scan berhasil: ${decodedText}`);
-    
     const found = masterBarang.find(item => {
         let kode = '', nama = '';
         if (Array.isArray(item)) {
@@ -593,7 +629,7 @@ function onScanSuccess(decodedText, decodedResult) {
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
-        alert(`Kode terdeteksi: ${decodedText} (Tidak ada di master barang, kode dimasukkan manual)`);
+        alert(`Kode terdeteksi: ${decodedText} (Dimasukkan manual)`);
 
         setTimeout(() => {
             const submitBtn = document.querySelector('#poSection button[type="submit"]');
@@ -604,28 +640,31 @@ function onScanSuccess(decodedText, decodedResult) {
     }
 }
 
-function onScanFailure(error) {
-    // Diabaikan agar tidak spam console log
-}
+function onScanFailure(error) {}
 
+// Fungsi Submit yang Otomatis Mendeteksi Mode Kirim Baru ATAU Update Edit
 async function submitPO(e) {
     if (e) e.preventDefault();
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
 
+    const isEditMode = (currentEditRowIndex !== null);
+    const actionType = isEditMode ? 'updatePO' : 'submitPO';
+
     if (btn) {
         btn.disabled = true;
         btn.style.opacity = "0.7";
-        btn.innerHTML = `<span class="modern-spinner"></span>Mengirim...`;
+        btn.innerHTML = `<span class="modern-spinner"></span>${isEditMode ? 'Memperbarui...' : 'Mengirim...'}`;
     }
 
     if (msg) {
         msg.style.color = "#38bdf8";
-        msg.innerText = "Mengirim data PO ke Google Sheets...";
+        msg.innerText = isEditMode ? "Memperbarui data di kedua sheet..." : "Mengirim data PO ke Google Sheets...";
     }
 
     const dataPO = {
-        action: 'submitPO',
+        action: actionType,
+        rowIndex: currentEditRowIndex,
         tanggal: document.getElementById('poTanggal') ? document.getElementById('poTanggal').value : '',
         kodeBarang: document.getElementById('poKode') ? document.getElementById('poKode').value : '',
         namaBarang: document.getElementById('poNama') ? document.getElementById('poNama').value : '',
@@ -634,40 +673,49 @@ async function submitPO(e) {
     };
 
     try {
-        await fetch(WEB_APP_URL, {
+        const response = await fetch(WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors',
             body: JSON.stringify(dataPO)
         });
+        const result = await response.json();
 
-        if (btn) {
-            btn.innerHTML = `✨ Berhasil!`;
-            btn.style.backgroundColor = "#10b981";
+        if (result.status === 'success') {
+            if (btn) {
+                btn.innerHTML = `✨ Berhasil!`;
+                btn.style.backgroundColor = "#10b981";
+            }
+            
+            if (msg) {
+                msg.style.color = "#10b981";
+                msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            if (document.getElementById('poForm')) document.getElementById('poForm').reset();
+            currentEditRowIndex = null; // Reset mode edit
+
+            if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
+            if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
+            if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
+            if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
+            if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
+            
+            if (btn) {
+                btn.innerHTML = "Kirim";
+                btn.style.background = ""; 
+            }
+
+        } else {
+            alert("Gagal: " + result.message);
+            if (btn) {
+                btn.innerHTML = isEditMode ? "💾 Update Data PO" : "Kirim";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
         }
-        
-        if (msg) {
-            msg.style.color = "#10b981";
-            msg.innerText = "Data PO Berhasil Disimpan di Google Sheets!";
-        }
 
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        if (document.getElementById('poForm')) document.getElementById('poForm').reset();
-        
-        if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
-        if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
-        if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
-        if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
-        if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
-        
-        // Jika modal riwayat sedang terbuka, langsung refresh otomatis datanya
-        if (document.getElementById('riwayatModal') && document.getElementById('riwayatModal').style.display === 'flex') {
-            loadRiwayatPOData();
-        }
-
-        setTimeout(() => { 
-            if (msg) msg.innerText = ""; 
-        }, 3000);
+        setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
 
     } catch (err) {
         console.error("Gagal mengirim:", err);
@@ -675,16 +723,16 @@ async function submitPO(e) {
             msg.style.color = "#ef4444";
             msg.innerText = "Terjadi kendala koneksi internet!";
         }
-    } finally {
         if (btn) {
-            btn.innerHTML = "Kirim";
-            btn.style.backgroundColor = ""; 
+            btn.innerHTML = isEditMode ? "💾 Update Data PO" : "Kirim";
+            btn.disabled = false;
+            btn.style.opacity = "1";
         }
+    } finally {
         checkFormValidity();
     }
 }
 
-// Inisialisasi Animasi Robot
 function initRobotAnimation() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
