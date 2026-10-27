@@ -1068,10 +1068,10 @@ function showCustomAlert(message) {
 }
 // Konfigurasi Firebase Web (Nanti disesuaikan dengan project Firebase kamu)
 const firebaseConfig = {
-  apiKey: "API_KEY_KAMU_DARI_FIREBASE",
-  projectId: "PROJECT_ID_KAMU",
-  messagingSenderId: "SENDER_ID_KAMU",
-  appId: "APP_ID_KAMU"
+  apiKey: "AIzaSyDgegl7vymJ6X9CxKBkUrmWTJFYlGC_ULY",
+  projectId: "gudang-nuhsantara",
+  messagingSenderId: "698331638433",
+  appId: "1:698331638433:web:f49f1b4675c487aca7dee0"
 };
 
 // Inisialisasi Firebase di Frontend
@@ -1103,3 +1103,30 @@ async function requestNotificationPermission() {
     console.error('Terjadi kesalahan saat meminta izin notifikasi:', error);
   }
 }
+// --- FITUR AUTO-TRIGGER NOTIFIKASI DENGAN SENTUHAN PERTAMA ---
+function initAutoNotificationTrigger() {
+    // Cek apakah izin sudah pernah diberikan atau ditolak sebelumnya
+    if (Notification.permission === 'granted' || Notification.permission === 'denied') {
+        return; // Kalau sudah di-izinkan atau diblokir, tidak usah dipancing lagi
+    }
+
+    const triggerNotificationOnTouch = () => {
+        console.log("Pengguna menyentuh layar, memicu permintaan izin notifikasi...");
+        
+        // Panggil fungsi minta izin yang sudah kita buat
+        requestNotificationPermission();
+
+        // Hapus listener setelah sentuhan pertama agar tidak terpanggil terus-menerus
+        window.removeEventListener('click', triggerNotificationOnTouch);
+        window.removeEventListener('touchstart', triggerNotificationOnTouch);
+    };
+
+    // Pasang perangkap klik/sentuh di seluruh jendela browser
+    window.addEventListener('click', triggerNotificationOnTouch, { once: true });
+    window.addEventListener('touchstart', triggerNotificationOnTouch, { once: true });
+}
+
+// Jalankan fungsi ini saat halaman dimuat
+window.addEventListener('DOMContentLoaded', () => {
+    initAutoNotificationTrigger();
+});
