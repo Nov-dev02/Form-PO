@@ -417,13 +417,8 @@ async function loadRiwayatPOData() {
                         <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
                         <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
                         <td style="padding: 10px; text-align: center; white-space: nowrap;">
-<<<<<<< HEAD
                             <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fas fa-edit"></i> Edit</button>
                             <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fas fa-trash"></i> Hapus</button>
-=======
-                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
->>>>>>> 573b507 (Update: Font Awesome icons, splash screen, and Google OAuth login)
                         </td>
                     </tr>
                 `;
