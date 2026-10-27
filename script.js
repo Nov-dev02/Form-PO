@@ -519,33 +519,6 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     checkFormValidity();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-async function hapusDataPO(rowIndex) {
-    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'deletePO',
-                rowIndex: rowIndex
-            })
-        });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            alert("Data PO berhasil dihapus!");
-            loadRiwayatPOData();
-        } else {
-            alert("Gagal menghapus data: " + result.message);
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Terjadi kesalahan koneksi saat menghapus data.");
-    }
-}
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
