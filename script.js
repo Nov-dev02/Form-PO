@@ -757,7 +757,7 @@ async function submitPO(e) {
                 msg.style.color = "#10b981";
                 msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
             }
-              If (Notification.permission === 'granted') {
+              if (Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(function(registration) {
                     registration.showNotification("Gudang Nuhsantara", {
                       body: isEditMode ? "Data PO berhasil diperbarui di sistem!" : "Data PO baru berhasil dikirim ke server!",
