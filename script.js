@@ -1097,7 +1097,20 @@ async function requestNotificationPermission() {
       
       if (token) {
         console.log('FCM Token perangkat:', token);
+        
         // Simpan token ini ke Google Sheets/Database supaya bisa dikirimi pesan otomatis!
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'saveFCMToken',
+                token: token,
+                user: localStorage.getItem('po_user') || 'Operator Gudang'
+            })
+        })
+        .then(res => res.json())
+        .then(res => console.log('Token berhasil disimpan di Sheets:', res))
+        .catch(err => console.error('Gagal simpan token:', err));
+
       } else {
         console.warn('Gagal mendapatkan token FCM.');
       }
