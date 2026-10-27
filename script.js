@@ -387,7 +387,7 @@ async function loadRiwayatPOData() {
             let formattedRows = [];
             for (let i = 1; i < rows.length; i++) {
                 formattedRows.push({
-
+                    rowIndex: i + 1,
                     tanggal: rows[i][0] || '',
                     kode: rows[i][1] || '',
                     nama: rows[i][2] || '',
