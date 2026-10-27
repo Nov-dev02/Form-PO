@@ -18,11 +18,12 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Menerima pesan background: ', payload);
   
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icon.png' // Pastikan ada file ikon di projectmu
-  };
+ const notificationTitle = payload.notification.title;
+ const notificationOptions = {
+      body: payload.notification.body,
+      icon: '/Form-PO/Favicon/Logo.png', // Sesuaikan path lengkap dengan folder Favicon dan huruf besar/kecilnya
+      badge: '/Form-PO/Favicon/Logo.png'
+    };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
