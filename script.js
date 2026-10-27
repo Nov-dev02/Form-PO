@@ -464,33 +464,29 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     checkFormValidity();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 async function hapusDataPO(rowIndex) {
-    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
-        return;
-    }
+    showCustomConfirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?", async () => {
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'deletePO',
+                    rowIndex: rowIndex
+                })
+            });
+            const result = await response.json();
 
-    try {
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'deletePO',
-                rowIndex: rowIndex
-            })
-        });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            alert("Data PO berhasil dihapus!");
-            loadRiwayatPOData();
-        } else {
-            alert("Gagal menghapus data: " + result.message);
+            if (result.status === 'success') {
+                showCustomAlert("Data PO berhasil dihapus!");
+                loadRiwayatPOData();
+            } else {
+                showCustomAlert("Gagal menghapus data: " + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            showCustomAlert("Terjadi kesalahan koneksi saat menghapus data.");
         }
-    } catch (err) {
-        console.error(err);
-        alert("Terjadi kesalahan koneksi saat menghapus data.");
-
-    }
+    });
 }
 
 function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
@@ -1029,4 +1025,71 @@ function getWeatherDescription(code) {
     if (code >= 80 && code <= 82) return { text: "Hujan Lebat", icon: "fa-solid fa-cloud-showers-heavy" };
     if (code >= 95 && code <= 99) return { text: "Badai Petir", icon: "fa-solid fa-cloud-bolt" };
     return { text: "Berawan", icon: "fa-solid fa-cloud" };
+}
+function showCustomConfirm(message, onYes) {
+    // Cek apakah modal kustom sudah ada di HTML, kalau belum buat secara otomatis
+    let modalOverlay = document.getElementById('customConfirmModal');
+    if (!modalOverlay) {
+        modalOverlay = document.createElement('div');
+        modalOverlay.id = 'customConfirmModal';
+        modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+        modalOverlay.innerHTML = `
+            <div style="background: #1e293b; border: 1px solid #334155; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; color: #f8fafc; font-family: inherit;">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;" id="customConfirmText"></div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button id="btnCustomNo" style="flex: 1; padding: 10px; background: #334155; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Batal</button>
+                    <button id="btnCustomYes" style="flex: 1; padding: 10px; background: #ef4444; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Ya, Hapus</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalOverlay);
+    }
+
+    document.getElementById('customConfirmText').innerText = message;
+    modalOverlay.style.display = 'flex';
+
+    const btnYes = document.getElementById('btnCustomYes');
+    const btnNo = document.getElementById('btnCustomNo');
+
+    // Bersihkan event listener sebelumnya supaya tidak menumpuk
+    const newBtnYes = btnYes.cloneNode(true);
+    const newBtnNo = btnNo.cloneNode(true);
+    btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+    btnNo.parentNode.replaceChild(newBtnNo, btnNo);
+
+    newBtnYes.addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+        onYes();
+    });
+
+    newBtnNo.addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+    });
+}
+
+function showCustomAlert(message) {
+    let alertOverlay = document.getElementById('customAlertModal');
+    if (!alertOverlay) {
+        alertOverlay = document.createElement('div');
+        alertOverlay.id = 'customAlertModal';
+        alertOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+        alertOverlay.innerHTML = `
+            <div style="background: #1e293b; border: 1px solid #334155; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; color: #f8fafc; font-family: inherit;">
+                <div style="font-size: 15px; font-weight: 500; margin-bottom: 20px; line-height: 1.5;" id="customAlertText"></div>
+                <button id="btnCustomOk" style="width: 100%; padding: 10px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">OK</button>
+            </div>
+        `;
+        document.body.appendChild(alertOverlay);
+    }
+
+    document.getElementById('customAlertText').innerText = message;
+    alertOverlay.style.display = 'flex';
+
+    const btnOk = document.getElementById('btnCustomOk');
+    const newBtnOk = btnOk.cloneNode(true);
+    btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+
+    newBtnOk.addEventListener('click', () => {
+        alertOverlay.style.display = 'none';
+    });
 }
