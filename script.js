@@ -1078,6 +1078,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+
 // Fungsi untuk meminta izin notifikasi ke HP
 async function requestNotificationPermission() {
   try {
@@ -1085,9 +1086,13 @@ async function requestNotificationPermission() {
     if (permission === 'granted') {
       console.log('Izin notifikasi diberikan.');
       
-      // Ambil Token FCM perangkat ini
+      // Daftarkan Service Worker secara manual dengan path sub-folder '/Form-PO/firebase-messaging-sw.js'
+      const serviceWorkerRegistration = await navigator.serviceWorker.register('/Form-PO/firebase-messaging-sw.js');
+      
+      // Ambil Token FCM dengan menyertakan serviceWorkerRegistration
       const token = await messaging.getToken({ 
-        vapidKey: 'BJjHYx5EzWY4X7ym1-2QEHfzDX8gk3PXqeaxa1qmaZXThERVNTNTNvflidqcPvG4MVWc4c2icU40XTw5QNQQN9o' 
+        vapidKey: 'BJjHYx5EzWY4X7ym1-2QEHfzDX8gk3PXqeaxa1qmaZXThERVNTNTNvflidqcPvG4MVWc4c2icU40XTw5QNQQN9o',
+        serviceWorkerRegistration: serviceWorkerRegistration
       });
       
       if (token) {
