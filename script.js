@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
-
+let currentEditRowIndex = null;
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
