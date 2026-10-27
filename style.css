@@ -15,6 +15,86 @@ body {
     align-items: center;
 }
 
+/* SPLASH SCREEN STYLING */
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0b0f19;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.splash-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.splash-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.splash-logo-container {
+    width: 80px;
+    height: 80px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 2px solid rgba(56, 189, 248, 0.3);
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.15);
+    animation: pulseLogo 1.5s infinite ease-in-out;
+}
+
+.splash-logo-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.splash-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.splash-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+}
+
+.native-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(56, 189, 248, 0.2);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spinNative 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+@keyframes spinNative {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseLogo {
+    0%, 100% { transform: scale(1); box-shadow: 0 8px 25px rgba(56, 189, 248, 0.15); }
+    50% { transform: scale(1.05); box-shadow: 0 12px 30px rgba(56, 189, 248, 0.3); }
+}
+
 .container {
     width: 100%;
     max-width: 420px;
@@ -158,6 +238,7 @@ input[type="number"]:focus {
     color: #94a3b8;
     pointer-events: none;
     z-index: 2;
+    font-size: 15px;
 }
 
 .input-with-icon input {
@@ -180,6 +261,7 @@ input[type="number"]:focus {
     padding: 4px;
     width: auto !important;
     height: auto !important;
+    font-size: 15px;
     transition: color 0.2s ease;
 }
 
@@ -205,7 +287,6 @@ button:hover {
     background: #0ea5e9;
 }
 
-/* [FITUR BARU] Styling Tombol Riwayat PO */
 .btn-riwayat {
     width: 100%;
     padding: 12px;
@@ -269,12 +350,6 @@ button:hover {
 .scanner-section {
     margin-bottom: 16px;
     text-align: center;
-}
-
-.scanner-section p {
-    font-size: 13px;
-    color: #94a3b8;
-    margin-bottom: 8px;
 }
 
 .btn-modal-trigger {
@@ -399,7 +474,6 @@ input[readonly] {
     color: #64748b;
 }
 
-/* SPINNER & DOTS */
 .spinner {
     display: inline-block !important;
     width: 16px !important;
@@ -415,18 +489,6 @@ input[readonly] {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-.dots::after {
-    content: '';
-    animation: dotAnimation 1.5s infinite steps(4, end);
-}
-
-@keyframes dotAnimation {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
 }
 
 #btnToggleScanner:hover {
@@ -504,4 +566,9 @@ input[readonly] {
 .social-list li:hover a {
     color: var(--clr) !important;
     transform: scale(1.15) !important;
+}
+#btnGoogleLogin:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-1px);
 }
