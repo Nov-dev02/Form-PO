@@ -1,7 +1,6 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
 
 let masterBarang = [];
-let currentEditRowIndex = null; // Penanda baris jika sedang mode edit
 let html5QrCode = null;
 let isScannerActive = false;
 
@@ -13,7 +12,6 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
-// Injeksi Styling Tombol & Spinner Modern secara Otomatis
 function injectModernStyles() {
     if (document.getElementById('modernCustomStyles')) return;
     const style = document.createElement('style');
@@ -55,7 +53,6 @@ function injectModernStyles() {
     document.head.appendChild(style);
 }
 
-// Fungsi Jam Real-Time
 function updateRealTimeClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -69,7 +66,6 @@ function updateRealTimeClock() {
 }
 setInterval(updateRealTimeClock, 1000);
 
-// Fungsi Sapaan Dinamis
 function setDynamicGreeting(username) {
     const greetingEl = document.getElementById('userGreeting');
     if (!greetingEl) return;
@@ -116,6 +112,7 @@ function setDynamicGreeting(username) {
 window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
+    initRealTimeWeather();
     
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
@@ -124,12 +121,20 @@ window.onload = function() {
     const savedUser = localStorage.getItem('po_user');
     const loginDate = localStorage.getItem('po_login_date');
 
-    if (savedUser && loginDate === today) {
-        tampilkanFormPO(savedUser);
-    } else {
-        localStorage.clear();
-        tampilkanLogin();
-    }
+    setTimeout(() => {
+        const splash = document.getElementById('appSplashScreen');
+        if (splash) {
+            splash.classList.add('fade-out');
+            setTimeout(() => splash.remove(), 400);
+        }
+
+        if (savedUser && loginDate === today) {
+            tampilkanFormPO(savedUser);
+        } else {
+            localStorage.clear();
+            tampilkanLogin();
+        }
+    }, 800);
 
     initRobotAnimation();
     initEventListeners();
@@ -205,7 +210,7 @@ async function handleLogin() {
             localStorage.setItem('po_login_date', today);
             
             if (btnLogin) {
-                btnLogin.innerHTML = "Masuk";
+                btnLogin.innerHTML = "Login";
                 btnLogin.disabled = false;
                 btnLogin.style.opacity = "1";
             }
@@ -213,7 +218,7 @@ async function handleLogin() {
             tampilkanFormPO(user);
         } else {
             if (btnLogin) {
-                btnLogin.innerHTML = "Masuk";
+                btnLogin.innerHTML = "Login";
                 btnLogin.disabled = false;
                 btnLogin.style.opacity = "1";
             }
@@ -224,7 +229,7 @@ async function handleLogin() {
         }
     } catch (err) {
         if (btnLogin) {
-            btnLogin.innerHTML = "Masuk";
+            btnLogin.innerHTML = "Login";
             btnLogin.disabled = false;
             btnLogin.style.opacity = "1";
         }
@@ -235,6 +240,40 @@ async function handleLogin() {
         console.error(err);
     }
 }
+
+
+// --- GOOGLE OAUTH LOGIN HANDLER ---
+function handleGoogleLogin(response) {
+    const responsePayload = parseJwt(response.credential);
+    const operatorName = responsePayload.name;
+    const operatorEmail = responsePayload.email;
+    
+    const errDiv = document.getElementById('loginError');
+    if (errDiv) {
+        errDiv.style.color = "#10b981";
+        errDiv.innerText = `Selamat datang, ${operatorName}! Membuka sistem...`;
+    }
+
+    setTimeout(() => {
+        const today = getLocalDateString();
+        localStorage.setItem('po_user', operatorName);
+        localStorage.setItem('po_email', operatorEmail);
+        localStorage.setItem('po_login_date', today);
+        
+        if (errDiv) errDiv.innerText = "";
+        tampilkanFormPO(operatorName);
+    }, 600);
+}
+
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+
 
 async function loadMasterBarang() {
     try {
@@ -313,7 +352,7 @@ function pilihBarang(kode, nama, pic) {
         }
     }, 150);
 }
-// --- FITUR RIWAYAT, EDIT, & HAPUS PO ---
+
 function openRiwayatModal() {
     const modal = document.getElementById('riwayatModal');
     if (modal) modal.style.display = 'flex';
@@ -348,7 +387,7 @@ async function loadRiwayatPOData() {
             let formattedRows = [];
             for (let i = 1; i < rows.length; i++) {
                 formattedRows.push({
-                    rowIndex: i + 1, // Nomor baris asli di spreadsheet
+
                     tanggal: rows[i][0] || '',
                     kode: rows[i][1] || '',
                     nama: rows[i][2] || '',
@@ -378,8 +417,13 @@ async function loadRiwayatPOData() {
                         <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
                         <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
                         <td style="padding: 10px; text-align: center; white-space: nowrap;">
+<<<<<<< HEAD
                             <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fas fa-edit"></i> Edit</button>
                             <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fas fa-trash"></i> Hapus</button>
+=======
+                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
+>>>>>>> 573b507 (Update: Font Awesome icons, splash screen, and Google OAuth login)
                         </td>
                     </tr>
                 `;
@@ -391,6 +435,66 @@ async function loadRiwayatPOData() {
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
+
+    }
+}
+
+function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
+    currentEditRowIndex = rowIndex;
+    
+    if (tanggal) {
+        try {
+            const d = new Date(tanggal);
+            if (!isNaN(d.getTime())) {
+                document.getElementById('poTanggal').value = d.toISOString().split('T')[0];
+            }
+        } catch(e) {
+            document.getElementById('poTanggal').value = getLocalDateString();
+        }
+    }
+    
+    document.getElementById('poKode').value = kode;
+    document.getElementById('poNama').value = nama;
+    document.getElementById('poPic').value = pic;
+    document.getElementById('poJumlah').value = jumlah;
+    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
+    
+    const btnSubmit = document.getElementById('btnSubmit');
+    if (btnSubmit) {
+        btnSubmit.innerHTML = "💾 Update Data PO";
+        btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+    }
+
+    closeRiwayatModal();
+    checkFormValidity();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function hapusDataPO(rowIndex) {
+    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deletePO',
+                rowIndex: rowIndex
+            })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert("Data PO berhasil dihapus!");
+            loadRiwayatPOData();
+        } else {
+            alert("Gagal menghapus data: " + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi saat menghapus data.");
+
     }
 }
 
@@ -693,7 +797,7 @@ async function submitPO(e) {
             await new Promise(resolve => setTimeout(resolve, 800));
 
             if (document.getElementById('poForm')) document.getElementById('poForm').reset();
-            currentEditRowIndex = null; // Reset mode edit
+
 
             if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
             if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
@@ -765,21 +869,18 @@ function initRobotAnimation() {
 
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('password');
-    const togglePassword = document.getElementById('togglePassword');
+    const eyeIconToggle = document.getElementById('eyeIconToggle');
     
-    if (!passwordInput || !togglePassword) return;
-
-    const eyeOpenSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-    const eyeClosedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c3 5 7 7 10 7s7-2 10-7"></path></svg>`;
+    if (!passwordInput || !eyeIconToggle) return;
 
     const isPassword = passwordInput.getAttribute('type') === 'password';
     
     if (isPassword) {
         passwordInput.setAttribute('type', 'text');
-        togglePassword.innerHTML = eyeOpenSvg;
+        eyeIconToggle.className = "fa-solid fa-eye";
     } else {
         passwordInput.setAttribute('type', 'password');
-        togglePassword.innerHTML = eyeClosedSvg;
+        eyeIconToggle.className = "fa-solid fa-eye-slash";
     }
 }
 
@@ -793,4 +894,144 @@ function tambahJumlah(angka) {
     let nilaiSekarang = parseInt(inputJumlah.value) || 0;
     inputJumlah.value = nilaiSekarang + angka;
     checkFormValidity();
+}
+
+// --- FUNGSI TRIGGER GOOGLE OAUTH ---
+function triggerGoogleLogin() {
+    // Memanggil prompt login Google secara otomatis saat tombol kustom diklik
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                // Fallback jika One Tap diblokir browser, arahkan user interaksi manual
+                console.log("Google One Tap prompt tidak muncul, periksa konfigurasi akun atau popup blocker.");
+                alert("Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.");
+            }
+        });
+    } else {
+        alert("Google API belum dimuat sepenuhnya. Pastikan terhubung ke internet.");
+    }
+}
+
+// --- FITUR CUACA REAL-TIME (DENGAN PEMICU SENTUHAN PERTAMA & AUTO-FALLBACK) ---
+function initRealTimeWeather() {
+    const tempEl = document.getElementById('weatherTemp');
+    const condEl = document.getElementById('weatherCondition');
+    const locEl = document.getElementById('weatherLocation'); 
+    const iconEl = document.getElementById('weatherIconContainer');
+
+    if (!tempEl) return;
+
+    // Fungsi utama untuk mengeksekusi GPS & Open-Meteo
+    const fetchWeatherByGPS = () => {
+        if (!navigator.geolocation) {
+            fetchDefaultWeather(-7.275, 112.793);
+            return;
+        }
+
+        if(locEl) locEl.textContent = "Menemukan lokasi...";
+        if(condEl) condEl.textContent = "Memuat Cuaca...";
+
+        let gpsResolved = false;
+
+        // Timer pengaman: Jika dalam 4 detik GPS tidak merespons, alihkan ke default Mulyorejo
+        const fallbackTimer = setTimeout(() => {
+            if (!gpsResolved) {
+                console.warn("GPS timeout, menggunakan lokasi default Mulyorejo.");
+                fetchDefaultWeather(-7.275, 112.793);
+            }
+        }, 4000);
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                gpsResolved = true;
+                clearTimeout(fallbackTimer);
+                
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                try {
+                    // 1. Ambil nama wilayah menggunakan Reverse Geocoding
+                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
+                    const geoData = await geoRes.json();
+                    
+                    const address = geoData.address || {};
+                    const wilayah = address.village || address.suburb || address.city_district || address.city || "Lokasi Anda";
+                    if(locEl) locEl.textContent = wilayah;
+
+                    // 2. Ambil data cuaca dari Open-Meteo API
+                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+                    const weatherData = await weatherRes.json();
+
+                    const temp = Math.round(weatherData.current.temperature_2m);
+                    const wCode = weatherData.current.weather_code;
+
+                    if(tempEl) tempEl.textContent = `${temp}°C`;
+                    
+                    const weatherInfo = getWeatherDescription(wCode);
+                    if(condEl) condEl.textContent = weatherInfo.text;
+                    if(iconEl) iconEl.innerHTML = `<i class="${weatherInfo.icon}"></i>`;
+
+                } catch (err) {
+                    console.error("Gagal mengambil data cuaca:", err);
+                    fetchDefaultWeather(lat, lon);
+                }
+            }, 
+            (error) => {
+                gpsResolved = true;
+                clearTimeout(fallbackTimer);
+                console.warn("Izin lokasi ditolak:", error.message);
+                fetchDefaultWeather(-7.275, 112.793); // Fallback ke Mulyorejo jika ditolak
+            }, 
+            { 
+                enableHighAccuracy: false, 
+                timeout: 3500, 
+                maximumAge: 60000 
+            }
+        );
+    };
+
+    // Trik Pemancing Izin: Tangkap sentuhan/klik pertama user di layar agar browser merestui pop-up GPS
+    const triggerPermissionOnTouch = () => {
+        fetchWeatherByGPS();
+        // Hapus listener setelah sentuhan pertama agar tidak terpanggil terus
+        window.removeEventListener('click', triggerPermissionOnTouch);
+        window.removeEventListener('touchstart', triggerPermissionOnTouch);
+    };
+
+    window.addEventListener('click', triggerPermissionOnTouch, { once: true });
+    window.addEventListener('touchstart', triggerPermissionOnTouch, { once: true });
+}
+
+// Fungsi cadangan / default jika GPS gagal atau ditolak
+async function fetchDefaultWeather(lat, lon) {
+    try {
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+        const weatherData = await weatherRes.json();
+        
+        const tempEl = document.getElementById('weatherTemp');
+        const condEl = document.getElementById('weatherCondition');
+        const locEl = document.getElementById('weatherLocation');
+        const iconEl = document.getElementById('weatherIconContainer');
+
+        if(tempEl) tempEl.textContent = `${Math.round(weatherData.current.temperature_2m)}°C`;
+        const info = getWeatherDescription(weatherData.current.weather_code);
+        if(condEl) condEl.textContent = info.text;
+        if(iconEl) iconEl.innerHTML = `<i class="${info.icon}"></i>`;
+        if(locEl) locEl.textContent = "Mulyorejo, Surabaya";
+    } catch(e) {
+        const condEl = document.getElementById('weatherCondition');
+        if(condEl) condEl.textContent = "Cerah Berawan";
+    }
+}
+
+// Helper pengubah kode cuaca API ke teks Indonesia dan ikon Font Awesome
+function getWeatherDescription(code) {
+    if (code === 0) return { text: "Cerah", icon: "fa-solid fa-sun" };
+    if (code >= 1 && code <= 3) return { text: "Berawan", icon: "fa-solid fa-cloud-sun" };
+    if (code >= 45 && code <= 48) return { text: "Berkabut", icon: "fa-solid fa-smog" };
+    if (code >= 51 && code <= 67) return { text: "Gerimis / Hujan Ringan", icon: "fa-solid fa-cloud-rain" };
+    if (code >= 71 && code <= 77) return { text: "Salju", icon: "fa-solid fa-snowflake" };
+    if (code >= 80 && code <= 82) return { text: "Hujan Lebat", icon: "fa-solid fa-cloud-showers-heavy" };
+    if (code >= 95 && code <= 99) return { text: "Badai Petir", icon: "fa-solid fa-cloud-bolt" };
+    return { text: "Berawan", icon: "fa-solid fa-cloud" };
 }
