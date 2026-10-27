@@ -10,6 +10,9 @@
     <link rel="manifest" href="manifest.json">
     <!-- Html5-qrcode library untuk scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Google Identity Services Library -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </head>
 <body>
 
@@ -83,6 +86,28 @@
 
                 <button type="submit" id="btnLogin">Login</button>
                 <div id="loginError" class="error-msg"></div>
+                <!-- Garis Pemisah / Divider -->
+<div style="display: flex; align-items: center; margin: 16px 0; color: #64748b; font-size: 12px;">
+    <div style="flex: 1; height: 1px; background: #334155;"></div>
+    <span style="padding: 0 10px;">Atau</span>
+    <div style="flex: 1; height: 1px; background: #334155;"></div>
+</div>
+
+<!-- Tombol Continue with Google -->
+<div id="g_id_onload"
+     data-client_id="https://95796216574-oh3m6ch1vhqo7r1necjbntvs33p2p0sp.apps.googleusercontent.com"
+     data-callback="handleGoogleLogin"
+     data-auto_prompt="false">
+</div>
+<div class="g_id_signin"
+     data-type="standard"
+     data-shape="rectangular"
+     data-theme="outline"
+     data-text="continue_with"
+     data-size="large"
+     data-logo_alignment="left"
+     style="display: flex; justify-content: center; width: 100%;">
+</div>
                 
                 <div class="social-area">
                     <div class="social-label">Sosial Media</div>
