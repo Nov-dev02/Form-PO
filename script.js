@@ -757,12 +757,13 @@ async function submitPO(e) {
                 msg.style.color = "#10b981";
                 msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
             }
-              if (Notification.permission === 'granted') {
+              If (Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then(function(registration) {
                     registration.showNotification("Gudang Nuhsantara", {
-                        body: "📦 Data PO baru berhasil dikirim dan dicatat!",
-                        icon: "Favicon/favicon.png", // Sesuaikan path ikon aplikasimu jika ada
-                        badge: "Favicon/favicon.png",
+                      body: isEditMode ? "Data PO berhasil diperbarui di sistem!" : "Data PO baru berhasil dikirim ke server!",
+
+                        icon: "https://nov-dev02.github.io/Form-PO/Favicon/Logo.png", // Ganti dengan link PNG logo kamu yang valid
+                        badge: "https://nov-dev02.github.io/Form-PO/Favicon/Logo.png",
                         vibrate: [200, 100, 200]
                     });
                 });
