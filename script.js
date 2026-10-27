@@ -1087,7 +1087,7 @@ async function requestNotificationPermission() {
       
       // Ambil Token FCM perangkat ini
       const token = await messaging.getToken({ 
-        vapidKey: 'VAPID_KEY_DARI_FIREBASE_CONSOLE' 
+        vapidKey: 'BJjHYx5EzWY4X7ym1-2QEHfzDX8gk3PXqeaxa1qmaZXThERVNTNTNvflidqcPvG4MVWc4c2icU40XTw5QNQQN9o' 
       });
       
       if (token) {
