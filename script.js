@@ -5,7 +5,7 @@ let html5QrCode = null;
 let isScannerActive = false;
 
 // ==========================================
-// 🎨 CUSTOM MODERN MODAL HELPER (Pengganti Alert/Confirm)
+// 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
 function showCustomModal({ title = "Informasi", message = "", type = "info", showCancel = false, confirmText = "OK", cancelText = "Batal" }) {
     return new Promise((resolve) => {
@@ -23,46 +23,46 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
             return;
         }
 
-        titleEl.textContent = title;
-        msgEl.textContent = message;
-        btnConfirm.textContent = confirmText;
-        btnCancel.textContent = cancelText;
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+        if (btnConfirm) btnConfirm.textContent = confirmText;
+        if (btnCancel) btnCancel.textContent = cancelText;
 
-        // Atur Ikon & Warna Tema Berdasarkan Tipe
-        if (type === 'success') {
-            iconEl.className = "fa-solid fa-check";
-            iconContainer.style.background = "rgba(16, 185, 129, 0.15)";
-            iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
-            iconContainer.style.color = "#10b981";
-            btnConfirm.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
-            btnConfirm.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.4)";
-        } else if (type === 'error') {
-            iconEl.className = "fa-solid fa-triangle-exclamation";
-            iconContainer.style.background = "rgba(239, 68, 68, 0.15)";
-            iconContainer.style.borderColor = "rgba(239, 68, 68, 0.4)";
-            iconContainer.style.color = "#ef4444";
-            btnConfirm.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
-            btnConfirm.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.4)";
-        } else if (type === 'warning') {
-            iconEl.className = "fa-solid fa-circle-question";
-            iconContainer.style.background = "rgba(245, 158, 11, 0.15)";
-            iconContainer.style.borderColor = "rgba(245, 158, 11, 0.4)";
-            iconContainer.style.color = "#f59e0b";
-            btnConfirm.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
-            btnConfirm.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.4)";
-        } else {
-            iconEl.className = "fa-solid fa-circle-info";
-            iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
-            iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
-            iconContainer.style.color = "#38bdf8";
-            btnConfirm.style.background = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)";
-            btnConfirm.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+        // Atur Ikon & Warna Tema Berdasarkan Tipe secara aman
+        if (iconEl && iconContainer && btnConfirm) {
+            if (type === 'success') {
+                iconEl.className = "fa-solid fa-check";
+                iconContainer.style.background = "rgba(16, 185, 129, 0.15)";
+                iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                iconContainer.style.color = "#10b981";
+                btnConfirm.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.4)";
+            } else if (type === 'error') {
+                iconEl.className = "fa-solid fa-triangle-exclamation";
+                iconContainer.style.background = "rgba(239, 68, 68, 0.15)";
+                iconContainer.style.borderColor = "rgba(239, 68, 68, 0.4)";
+                iconContainer.style.color = "#ef4444";
+                btnConfirm.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.4)";
+            } else if (type === 'warning') {
+                iconEl.className = "fa-solid fa-circle-question";
+                iconContainer.style.background = "rgba(245, 158, 11, 0.15)";
+                iconContainer.style.borderColor = "rgba(245, 158, 11, 0.4)";
+                iconContainer.style.color = "#f59e0b";
+                btnConfirm.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.4)";
+            } else {
+                iconEl.className = "fa-solid fa-circle-info";
+                iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
+                iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
+                iconContainer.style.color = "#38bdf8";
+                btnConfirm.style.background = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+            }
         }
 
-        if (showCancel) {
-            btnCancel.style.display = "block";
-        } else {
-            btnCancel.style.display = "none";
+        if (btnCancel) {
+            btnCancel.style.display = showCancel ? "block" : "none";
         }
 
         // Tampilkan Modal dengan Animasi Smooth
@@ -77,14 +77,14 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
             wrapper.style.opacity = "0";
             setTimeout(() => {
                 modalBox.style.display = "none";
-                btnConfirm.onclick = null;
-                btnCancel.onclick = null;
+                if (btnConfirm) btnConfirm.onclick = null;
+                if (btnCancel) btnCancel.onclick = null;
                 resolve(result);
             }, 200);
         };
 
-        btnConfirm.onclick = () => cleanup(true);
-        btnCancel.onclick = () => cleanup(false);
+        if (btnConfirm) btnConfirm.onclick = () => cleanup(true);
+        if (btnCancel) btnCancel.onclick = () => cleanup(false);
     });
 }
 
