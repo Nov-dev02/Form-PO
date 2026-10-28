@@ -565,25 +565,21 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // [BARU] Tampilkan modal loading saat proses hapus berjalan ke server
-    showCustomModal({
-        title: "Memproses...",
-        message: "Sedang menghapus data dari server, mohon tunggu sebentar...",
-        type: "info",
-        showCancel: false,
-        confirmText: "Memuat..."
-    });
+    // Tampilkan modal loading sederhana tanpa bikin promise baru yang bentrok
+    const modalBox = document.getElementById('customModalBox');
+    const wrapper = document.getElementById('modalContentWrapper');
+    document.getElementById('modalTitle').textContent = "Memproses...";
+    document.getElementById('modalMessage').textContent = "Sedang menghapus data dari server, mohon tunggu...";
+    document.getElementById('modalIconContainer').innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+    document.getElementById('modalBtnCancel').style.display = "none";
     
-    // Ubah icon jadi spinner loading yang keren
-    const iconContainer = document.getElementById('modalIconContainer');
-    if (iconContainer) {
-        iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
-    }
     const btnConfirm = document.getElementById('modalBtnConfirm');
-    if (btnConfirm) {
-        btnConfirm.disabled = true;
-        btnConfirm.style.opacity = "0.6";
-    }
+    btnConfirm.textContent = "Memuat...";
+    btnConfirm.style.display = "none"; // Sembunyikan tombol konfirmasi saat loading
+
+    modalBox.style.display = "flex";
+    wrapper.style.transform = "scale(1)";
+    wrapper.style.opacity = "1";
 
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -596,7 +592,13 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            // Begitu sukses, langsung tampilkan modal sukses
+            // Tutup dulu modal loading-nya sebentar dengan mulus
+            wrapper.style.transform = "scale(0.9)";
+            wrapper.style.opacity = "0";
+            await new Promise(resolve => setTimeout(resolve, 200));
+            modalBox.style.display = "none";
+
+            // Munculkan modal sukses
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
@@ -606,6 +608,7 @@ async function hapusDataPO(rowIndex) {
             });
             loadRiwayatPOData();
         } else {
+            modalBox.style.display = "none";
             await showCustomModal({
                 title: "Gagal",
                 message: "Gagal menghapus data: " + result.message,
@@ -616,6 +619,7 @@ async function hapusDataPO(rowIndex) {
         }
     } catch (err) {
         console.error(err);
+        modalBox.style.display = "none";
         await showCustomModal({
             title: "Kesalahan",
             message: "Terjadi kesalahan koneksi saat menghapus data.",
@@ -623,6 +627,9 @@ async function hapusDataPO(rowIndex) {
             showCancel: false,
             confirmText: "Tutup"
         });
+    } finally {
+        // Kembalikan tombol konfirmasi ke bentuk semula untuk penggunaan berikutnya
+        btnConfirm.style.display = "block";
     }
 }
 function initEventListeners() {
