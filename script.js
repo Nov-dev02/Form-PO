@@ -565,6 +565,26 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
+    // [BARU] Tampilkan modal loading saat proses hapus berjalan ke server
+    showCustomModal({
+        title: "Memproses...",
+        message: "Sedang menghapus data dari server, mohon tunggu sebentar...",
+        type: "info",
+        showCancel: false,
+        confirmText: "Memuat..."
+    });
+    
+    // Ubah icon jadi spinner loading yang keren
+    const iconContainer = document.getElementById('modalIconContainer');
+    if (iconContainer) {
+        iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+    }
+    const btnConfirm = document.getElementById('modalBtnConfirm');
+    if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.style.opacity = "0.6";
+    }
+
     try {
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
@@ -576,6 +596,7 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
+            // Begitu sukses, langsung tampilkan modal sukses
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
@@ -604,7 +625,6 @@ async function hapusDataPO(rowIndex) {
         });
     }
 }
-
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
