@@ -548,7 +548,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 // ==========================================
-// 🗑️ FUNGSI HAPUS DATA PO (Anti-Nyangkut & Bersih Total)
+// 🗑️ FUNGSI HAPUS DATA PO (Auto-Close & Auto-Refresh)
 // ==========================================
 async function hapusDataPO(rowIndex) {
     const isConfirmed = await showCustomModal({
@@ -564,7 +564,7 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // Tampilkan modal loading manual yang aman
+    // Tampilkan modal loading manual
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
     const titleEl = document.getElementById('modalTitle');
@@ -576,7 +576,6 @@ async function hapusDataPO(rowIndex) {
     if (titleEl) titleEl.textContent = "Memproses...";
     if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
     
-    // Gunakan struktur HTML yang lengkap dengan id="modalIcon" agar tidak hilang
     if (iconContainer) {
         iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
         iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
@@ -603,26 +602,39 @@ async function hapusDataPO(rowIndex) {
         });
         const result = await response.json();
 
-        // Tutup modal loading dengan transisi mulus
-        if (wrapper) {
-            wrapper.style.transform = "scale(0.9)";
-            wrapper.style.opacity = "0";
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
-        if (modalBox) modalBox.style.display = "none";
-
         if (result.status === 'success') {
-            // Panggil modal sukses
-            await showCustomModal({
-                title: "Berhasil",
-                message: "Data PO berhasil dihapus!",
-                type: "success",
-                showCancel: false,
-                confirmText: "OK"
-            });
+            // Ubah konten modal jadi pesan Sukses dengan centang hijau
+            if (titleEl) titleEl.textContent = "Berhasil";
+            if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
+            if (iconContainer) {
+                iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-check" style="color: #10b981;"></i>`;
+                iconContainer.style.background = "rgba(16, 185, 129, 0.15)";
+                iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                iconContainer.style.color = "#10b981";
+            }
+
+            // Tunggu 1.5 detik supaya pesan suksesnya sempat terbaca user
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Tutup modal secara otomatis
+            if (wrapper) {
+                wrapper.style.transform = "scale(0.9)";
+                wrapper.style.opacity = "0";
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (modalBox) modalBox.style.display = "none";
+
+            // Refresh tabel riwayat otomatis
             loadRiwayatPOData();
         } else {
-            await showCustomModal({
+            if (wrapper) {
+                wrapper.style.transform = "scale(0.9)";
+                wrapper.style.opacity = "0";
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (modalBox) modalBox.style.display = "none";
+
+            showCustomModal({
                 title: "Gagal",
                 message: "Gagal menghapus data: " + result.message,
                 type: "error",
@@ -640,7 +652,7 @@ async function hapusDataPO(rowIndex) {
         await new Promise(resolve => setTimeout(resolve, 200));
         if (modalBox) modalBox.style.display = "none";
 
-        await showCustomModal({
+        showCustomModal({
             title: "Kesalahan",
             message: "Terjadi kesalahan koneksi saat menghapus data.",
             type: "error",
