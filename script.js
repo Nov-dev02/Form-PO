@@ -465,22 +465,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
 }
 
 async function hapusDataPO(rowIndex) {
-    // Ganti confirm() bawaan browser jadi konfirmasi SweetAlert2
-    const confirmResult = await Swal.fire({
-        title: 'Yakin ingin menghapus?',
-        text: "Data PO ini akan dihapus dari Form PO & Database_PO secara permanen!",
-        icon: 'warning',
-        showCancelButton: true,
-        background: '#1e293b', // Tema gelap selaras
-        color: '#f8fafc',
-        confirmButtonColor: '#ef4444', // Tombol merah untuk aksi hapus
-        cancelButtonColor: '#64748b',   // Tombol abu-abu untuk batal
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
-    });
-
-    // Jika user tidak klik tombol konfirmasi, batalkan proses
-    if (!confirmResult.isConfirmed) {
+    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
         return;
     }
 
@@ -495,38 +480,14 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            // Ganti alert() sukses jadi SweetAlert2 sukses
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Data PO berhasil dihapus!',
-                icon: 'success',
-                background: '#1e293b',
-                color: '#f8fafc',
-                confirmButtonColor: '#3b82f6'
-            });
+            alert("Data PO berhasil dihapus!");
             loadRiwayatPOData();
         } else {
-            // Ganti alert() gagal dari server
-            Swal.fire({
-                title: 'Gagal!',
-                text: "Gagal menghapus data: " + result.message,
-                icon: 'error',
-                background: '#1e293b',
-                color: '#f8fafc',
-                confirmButtonColor: '#3b82f6'
-            });
+            alert("Gagal menghapus data: " + result.message);
         }
     } catch (err) {
         console.error(err);
-        // Ganti alert() error koneksi
-        Swal.fire({
-            title: 'Kesalahan!',
-            text: "Terjadi kesalahan koneksi saat menghapus data.",
-            icon: 'error',
-            background: '#1e293b',
-            color: '#f8fafc',
-            confirmButtonColor: '#3b82f6'
-        });
+        alert("Terjadi kesalahan koneksi saat menghapus data.");
     }
 }
 
