@@ -547,9 +547,8 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     checkFormValidity();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 // ==========================================
-// 🗑️ FUNGSI HAPUS DATA PO (Menggunakan Custom Modal & Loading Aman)
+// 🗑️ FUNGSI HAPUS DATA PO (Final & Mulus Jaya)
 // ==========================================
 async function hapusDataPO(rowIndex) {
     const isConfirmed = await showCustomModal({
@@ -565,7 +564,7 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // Tampilkan modal loading dengan aman
+    // Tampilkan modal loading
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
     const titleEl = document.getElementById('modalTitle');
@@ -574,15 +573,17 @@ async function hapusDataPO(rowIndex) {
     const btnConfirm = document.getElementById('modalBtnConfirm');
     const btnCancel = document.getElementById('modalBtnCancel');
 
-    titleEl.textContent = "Memproses...";
-    msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
-    iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
-    btnCancel.style.display = "none";
-    btnConfirm.style.display = "none"; // Sembunyikan tombol konfirmasi selama loading
+    if (titleEl) titleEl.textContent = "Memproses...";
+    if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
+    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+    if (btnCancel) btnCancel.style.display = "none";
+    if (btnConfirm) btnConfirm.style.display = "none";
 
-    modalBox.style.display = "flex";
-    wrapper.style.transform = "scale(1)";
-    wrapper.style.opacity = "1";
+    if (modalBox) modalBox.style.display = "flex";
+    if (wrapper) {
+        wrapper.style.transform = "scale(1)";
+        wrapper.style.opacity = "1";
+    }
 
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -594,13 +595,16 @@ async function hapusDataPO(rowIndex) {
         });
         const result = await response.json();
 
-        // Tutup modal loading terlebih dahulu dengan transisi mulus
-        wrapper.style.transform = "scale(0.9)";
-        wrapper.style.opacity = "0";
+        // Tutup modal loading dengan transisi mulus
+        if (wrapper) {
+            wrapper.style.transform = "scale(0.9)";
+            wrapper.style.opacity = "0";
+        }
         await new Promise(resolve => setTimeout(resolve, 200));
-        modalBox.style.display = "none";
+        if (modalBox) modalBox.style.display = "none";
 
         if (result.status === 'success') {
+            // Panggil modal sukses (ikon otomatis jadi centang hijau karena tipenya 'success')
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
@@ -621,11 +625,12 @@ async function hapusDataPO(rowIndex) {
     } catch (err) {
         console.error(err);
         
-        // Tutup modal loading jika terjadi error jaringan
-        wrapper.style.transform = "scale(0.9)";
-        wrapper.style.opacity = "0";
+        if (wrapper) {
+            wrapper.style.transform = "scale(0.9)";
+            wrapper.style.opacity = "0";
+        }
         await new Promise(resolve => setTimeout(resolve, 200));
-        modalBox.style.display = "none";
+        if (modalBox) modalBox.style.display = "none";
 
         await showCustomModal({
             title: "Kesalahan",
@@ -635,8 +640,7 @@ async function hapusDataPO(rowIndex) {
             confirmText: "Tutup"
         });
     } finally {
-        // Pastikan tombol kembali normal untuk penggunaan berikutnya
-        btnConfirm.style.display = "block";
+        if (btnConfirm) btnConfirm.style.display = "block";
     }
 }
 function initEventListeners() {
