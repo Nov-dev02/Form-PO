@@ -549,7 +549,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
 }
 
 // ==========================================
-// 🗑️ FUNGSI HAPUS DATA PO (Menggunakan Custom Modal)
+// 🗑️ FUNGSI HAPUS DATA PO (Menggunakan Custom Modal & Loading Aman)
 // ==========================================
 async function hapusDataPO(rowIndex) {
     const isConfirmed = await showCustomModal({
@@ -565,17 +565,20 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // Tampilkan modal loading sederhana tanpa bikin promise baru yang bentrok
+    // Tampilkan modal loading dengan aman
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
-    document.getElementById('modalTitle').textContent = "Memproses...";
-    document.getElementById('modalMessage').textContent = "Sedang menghapus data dari server, mohon tunggu...";
-    document.getElementById('modalIconContainer').innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
-    document.getElementById('modalBtnCancel').style.display = "none";
-    
+    const titleEl = document.getElementById('modalTitle');
+    const msgEl = document.getElementById('modalMessage');
+    const iconContainer = document.getElementById('modalIconContainer');
     const btnConfirm = document.getElementById('modalBtnConfirm');
-    btnConfirm.textContent = "Memuat...";
-    btnConfirm.style.display = "none"; // Sembunyikan tombol konfirmasi saat loading
+    const btnCancel = document.getElementById('modalBtnCancel');
+
+    titleEl.textContent = "Memproses...";
+    msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
+    iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+    btnCancel.style.display = "none";
+    btnConfirm.style.display = "none"; // Sembunyikan tombol konfirmasi selama loading
 
     modalBox.style.display = "flex";
     wrapper.style.transform = "scale(1)";
@@ -591,14 +594,13 @@ async function hapusDataPO(rowIndex) {
         });
         const result = await response.json();
 
-        if (result.status === 'success') {
-            // Tutup dulu modal loading-nya sebentar dengan mulus
-            wrapper.style.transform = "scale(0.9)";
-            wrapper.style.opacity = "0";
-            await new Promise(resolve => setTimeout(resolve, 200));
-            modalBox.style.display = "none";
+        // Tutup modal loading terlebih dahulu dengan transisi mulus
+        wrapper.style.transform = "scale(0.9)";
+        wrapper.style.opacity = "0";
+        await new Promise(resolve => setTimeout(resolve, 200));
+        modalBox.style.display = "none";
 
-            // Munculkan modal sukses
+        if (result.status === 'success') {
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
@@ -608,7 +610,6 @@ async function hapusDataPO(rowIndex) {
             });
             loadRiwayatPOData();
         } else {
-            modalBox.style.display = "none";
             await showCustomModal({
                 title: "Gagal",
                 message: "Gagal menghapus data: " + result.message,
@@ -619,7 +620,13 @@ async function hapusDataPO(rowIndex) {
         }
     } catch (err) {
         console.error(err);
+        
+        // Tutup modal loading jika terjadi error jaringan
+        wrapper.style.transform = "scale(0.9)";
+        wrapper.style.opacity = "0";
+        await new Promise(resolve => setTimeout(resolve, 200));
         modalBox.style.display = "none";
+
         await showCustomModal({
             title: "Kesalahan",
             message: "Terjadi kesalahan koneksi saat menghapus data.",
@@ -628,7 +635,7 @@ async function hapusDataPO(rowIndex) {
             confirmText: "Tutup"
         });
     } finally {
-        // Kembalikan tombol konfirmasi ke bentuk semula untuk penggunaan berikutnya
+        // Pastikan tombol kembali normal untuk penggunaan berikutnya
         btnConfirm.style.display = "block";
     }
 }
