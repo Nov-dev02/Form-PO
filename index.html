@@ -13,8 +13,6 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 </head>
 <body>
 
@@ -68,7 +66,7 @@
                 </svg>
             </div>
 
-            <div class="header-login">
+                        <div class="header-login">
                 <h2>Login Gudang</h2>
                 <div class="real-time-clock clock">00:00:00</div>
             </div>
@@ -92,14 +90,16 @@
                             <i class="fa-solid fa-lock"></i>
                         </span>
                         <input type="password" id="password" placeholder="Masukkan password" required>
-                        <button type="button" id="togglePassword" class="eye-icon" onclick="togglePasswordVisibility()">
+                        <span id="togglePassword" class="eye-icon" onclick="togglePasswordVisibility()">
                             <i class="fa-solid fa-eye-slash" id="eyeIconToggle"></i>
-                        </button>
+                        </span>
                     </div>
                 </div>
 
                 <button type="submit" id="btnLogin">Login</button>
                 <div id="loginError" class="error-msg"></div>
+            </form>
+
 
                 <!-- Garis Pemisah / Divider -->
                 <div style="display: flex; align-items: center; margin: 16px 0; color: #64748b; font-size: 12px;">
@@ -270,8 +270,8 @@
             <td colspan="6" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
         </tr>
     </tbody>
-</table>               
-     </div>
+</table>
+</div>
             <div style="margin-top: 14px; text-align: right;">
                 <button type="button" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Tutup</button>
             </div>
