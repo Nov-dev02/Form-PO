@@ -548,7 +548,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 // ==========================================
-// 🗑️ FUNGSI HAPUS DATA PO (Final & Mulus Jaya)
+// 🗑️ FUNGSI HAPUS DATA PO (Anti-Nyangkut & Bersih Total)
 // ==========================================
 async function hapusDataPO(rowIndex) {
     const isConfirmed = await showCustomModal({
@@ -564,7 +564,7 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // Tampilkan modal loading
+    // Tampilkan modal loading manual yang aman
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
     const titleEl = document.getElementById('modalTitle');
@@ -575,7 +575,15 @@ async function hapusDataPO(rowIndex) {
 
     if (titleEl) titleEl.textContent = "Memproses...";
     if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
-    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+    
+    // Gunakan struktur HTML yang lengkap dengan id="modalIcon" agar tidak hilang
+    if (iconContainer) {
+        iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+        iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
+        iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
+        iconContainer.style.color = "#38bdf8";
+    }
+    
     if (btnCancel) btnCancel.style.display = "none";
     if (btnConfirm) btnConfirm.style.display = "none";
 
@@ -604,7 +612,7 @@ async function hapusDataPO(rowIndex) {
         if (modalBox) modalBox.style.display = "none";
 
         if (result.status === 'success') {
-            // Panggil modal sukses (ikon otomatis jadi centang hijau karena tipenya 'success')
+            // Panggil modal sukses
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
