@@ -4,6 +4,90 @@ let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
 
+// ==========================================
+// 🎨 CUSTOM MODERN MODAL HELPER (Pengganti Alert/Confirm)
+// ==========================================
+function showCustomModal({ title = "Informasi", message = "", type = "info", showCancel = false, confirmText = "OK", cancelText = "Batal" }) {
+    return new Promise((resolve) => {
+        const modalBox = document.getElementById('customModalBox');
+        const wrapper = document.getElementById('modalContentWrapper');
+        const titleEl = document.getElementById('modalTitle');
+        const msgEl = document.getElementById('modalMessage');
+        const iconEl = document.getElementById('modalIcon');
+        const iconContainer = document.getElementById('modalIconContainer');
+        const btnConfirm = document.getElementById('modalBtnConfirm');
+        const btnCancel = document.getElementById('modalBtnCancel');
+
+        if (!modalBox || !wrapper) {
+            resolve(true);
+            return;
+        }
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        btnConfirm.textContent = confirmText;
+        btnCancel.textContent = cancelText;
+
+        // Atur Ikon & Warna Tema Berdasarkan Tipe
+        if (type === 'success') {
+            iconEl.className = "fa-solid fa-check";
+            iconContainer.style.background = "rgba(16, 185, 129, 0.15)";
+            iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
+            iconContainer.style.color = "#10b981";
+            btnConfirm.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+            btnConfirm.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.4)";
+        } else if (type === 'error') {
+            iconEl.className = "fa-solid fa-triangle-exclamation";
+            iconContainer.style.background = "rgba(239, 68, 68, 0.15)";
+            iconContainer.style.borderColor = "rgba(239, 68, 68, 0.4)";
+            iconContainer.style.color = "#ef4444";
+            btnConfirm.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+            btnConfirm.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.4)";
+        } else if (type === 'warning') {
+            iconEl.className = "fa-solid fa-circle-question";
+            iconContainer.style.background = "rgba(245, 158, 11, 0.15)";
+            iconContainer.style.borderColor = "rgba(245, 158, 11, 0.4)";
+            iconContainer.style.color = "#f59e0b";
+            btnConfirm.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+            btnConfirm.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.4)";
+        } else {
+            iconEl.className = "fa-solid fa-circle-info";
+            iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
+            iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
+            iconContainer.style.color = "#38bdf8";
+            btnConfirm.style.background = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)";
+            btnConfirm.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+        }
+
+        if (showCancel) {
+            btnCancel.style.display = "block";
+        } else {
+            btnCancel.style.display = "none";
+        }
+
+        // Tampilkan Modal dengan Animasi Smooth
+        modalBox.style.display = "flex";
+        setTimeout(() => {
+            wrapper.style.transform = "scale(1)";
+            wrapper.style.opacity = "1";
+        }, 10);
+
+        const cleanup = (result) => {
+            wrapper.style.transform = "scale(0.9)";
+            wrapper.style.opacity = "0";
+            setTimeout(() => {
+                modalBox.style.display = "none";
+                btnConfirm.onclick = null;
+                btnCancel.onclick = null;
+                resolve(result);
+            }, 200);
+        };
+
+        btnConfirm.onclick = () => cleanup(true);
+        btnCancel.onclick = () => cleanup(false);
+    });
+}
+
 function getLocalDateString() {
     const now = new Date();
     const year = now.getFullYear();
@@ -464,8 +548,20 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ==========================================
+// 🗑️ FUNGSI HAPUS DATA PO (Menggunakan Custom Modal)
+// ==========================================
 async function hapusDataPO(rowIndex) {
-    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
+    const isConfirmed = await showCustomModal({
+        title: "Konfirmasi Hapus",
+        message: "Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?",
+        type: "warning",
+        showCancel: true,
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal"
+    });
+
+    if (!isConfirmed) {
         return;
     }
 
@@ -480,14 +576,32 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            alert("Data PO berhasil dihapus!");
+            await showCustomModal({
+                title: "Berhasil",
+                message: "Data PO berhasil dihapus!",
+                type: "success",
+                showCancel: false,
+                confirmText: "OK"
+            });
             loadRiwayatPOData();
         } else {
-            alert("Gagal menghapus data: " + result.message);
+            await showCustomModal({
+                title: "Gagal",
+                message: "Gagal menghapus data: " + result.message,
+                type: "error",
+                showCancel: false,
+                confirmText: "Tutup"
+            });
         }
     } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi saat menghapus data.");
+        await showCustomModal({
+            title: "Kesalahan",
+            message: "Terjadi kesalahan koneksi saat menghapus data.",
+            type: "error",
+            showCancel: false,
+            confirmText: "Tutup"
+        });
     }
 }
 
@@ -614,7 +728,11 @@ async function startCameraScanner() {
         );
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
-        alert("Tidak dapat mengakses kamera: " + (err.message || err));
+        showCustomModal({
+            title: "Akses Kamera",
+            message: "Tidak dapat mengakses kamera: " + (err.message || err),
+            type: "error"
+        });
         readerDiv.style.display = 'none';
         if (titleScanner) titleScanner.textContent = "Scan QR";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
@@ -643,7 +761,7 @@ async function stopCameraScanner() {
     isScannerActive = false;
 }
 
-function onScanSuccess(decodedText, decodedResult) {
+async function onScanSuccess(decodedText, decodedResult) {
     const found = masterBarang.find(item => {
         let kode = '', nama = '';
         if (Array.isArray(item)) {
@@ -663,13 +781,21 @@ function onScanSuccess(decodedText, decodedResult) {
         let pic = Array.isArray(found) ? found[2] : (found.pic || found.penanggung_jawab || '');
         
         pilihBarang(kode, nama, pic);
-        alert(`Berhasil memilih barang: ${nama}`);
+        await showCustomModal({
+            title: "Scan Berhasil",
+            message: `Berhasil memilih barang: ${nama}`,
+            type: "success"
+        });
     } else {
         document.getElementById('poKode').value = decodedText;
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
-        alert(`Kode terdeteksi: ${decodedText} (Dimasukkan manual)`);
+        await showCustomModal({
+            title: "Kode Ditemukan",
+            message: `Kode terdeteksi: ${decodedText} (Dimasukkan manual)`,
+            type: "info"
+        });
 
         setTimeout(() => {
             const submitBtn = document.querySelector('#poSection button[type="submit"]');
@@ -732,7 +858,7 @@ async function submitPO(e) {
             await new Promise(resolve => setTimeout(resolve, 800));
 
             if (document.getElementById('poForm')) document.getElementById('poForm').reset();
-            currentEditRowIndex = null; // Reset mode edit
+            currentEditRowIndex = null;
 
             if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
             if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
@@ -746,7 +872,11 @@ async function submitPO(e) {
             }
 
         } else {
-            alert("Gagal: " + result.message);
+            await showCustomModal({
+                title: "Gagal",
+                message: "Gagal: " + result.message,
+                type: "error"
+            });
             if (btn) {
                 btn.innerHTML = isEditMode ? "💾 Update Data PO" : "Kirim";
                 btn.disabled = false;
@@ -835,11 +965,19 @@ function triggerGoogleLogin() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.prompt((notification) => {
             if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                alert("Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.");
+                showCustomModal({
+                    title: "Google Login",
+                    message: "Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.",
+                    type: "warning"
+                });
             }
         });
     } else {
-        alert("Google API belum dimuat sepenuhnya. Pastikan terhubung ke internet.");
+        showCustomModal({
+            title: "Google Login",
+            message: "Google API belum dimuat sepenuhnya. Pastikan terhubung ke internet.",
+            type: "warning"
+        });
     }
 }
 
@@ -962,14 +1100,13 @@ function getWeatherDescription(code) {
 
 async function cekRekapOtomatis() {
   const namaPicLogin = localStorage.getItem('po_user') || "";
-  if (!namaPicLogin) return; // Jika belum login, abaikan
+  if (!namaPicLogin) return;
 
   try {
     const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}`);
     const hasil = await response.json();
     
     if (hasil.status === "success") {
-      // Kunci unik berdasarkan tanggal rekap DAN nama PIC supaya hanya muncul sekali sehari per device
       const kunciHariIni = `notif_rekap_kemarin_${hasil.tanggal}_${namaPicLogin}`;
       const sudahMuncul = localStorage.getItem(kunciHariIni);
 
@@ -982,10 +1119,12 @@ async function cekRekapOtomatis() {
           pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: kemarin tidak ada catatan PO baru atas namamu.`;
         }
         
-        // Munculkan sebagai Pop-up Alert di HP PIC yang bersangkutan
-        alert(pesanNotifikasi);
+        await showCustomModal({
+            title: "Rekap Gudang",
+            message: pesanNotifikasi,
+            type: "info"
+        });
         
-        // Simpan status agar tidak muncul berulang-ulang di hari yang sama pada device ini
         localStorage.setItem(kunciHariIni, "true");
       }
     }
@@ -994,7 +1133,6 @@ async function cekRekapOtomatis() {
   }
 }
 
-// Jalankan pengecekan otomatis setelah aplikasi berhasil dimuat di HP PIC
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(cekRekapOtomatis, 2000);
 });
