@@ -591,6 +591,58 @@ async function hapusDataPO(rowIndex) {
             body: JSON.stringify({
                 action: 'deletePO',
                 rowIndex: rowIndex
+// ==========================================
+// 🗑️ FUNGSI HAPUS DATA PO (Anti-Nyangkut & Bersih Total)
+// ==========================================
+async function hapusDataPO(rowIndex) {
+    const isConfirmed = await showCustomModal({
+        title: "Konfirmasi Hapus",
+        message: "Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?",
+        type: "warning",
+        showCancel: true,
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal"
+    });
+
+    if (!isConfirmed) {
+        return;
+    }
+
+    // Tampilkan modal loading manual yang aman
+    const modalBox = document.getElementById('customModalBox');
+    const wrapper = document.getElementById('modalContentWrapper');
+    const titleEl = document.getElementById('modalTitle');
+    const msgEl = document.getElementById('modalMessage');
+    const iconContainer = document.getElementById('modalIconContainer');
+    const btnConfirm = document.getElementById('modalBtnConfirm');
+    const btnCancel = document.getElementById('modalBtnCancel');
+
+    if (titleEl) titleEl.textContent = "Memproses...";
+    if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
+    
+    // Gunakan struktur HTML yang lengkap dengan id="modalIcon" agar tidak hilang
+    if (iconContainer) {
+        iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+        iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
+        iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
+        iconContainer.style.color = "#38bdf8";
+    }
+    
+    if (btnCancel) btnCancel.style.display = "none";
+    if (btnConfirm) btnConfirm.style.display = "none";
+
+    if (modalBox) modalBox.style.display = "flex";
+    if (wrapper) {
+        wrapper.style.transform = "scale(1)";
+        wrapper.style.opacity = "1";
+    }
+
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deletePO',
+                rowIndex: rowIndex
             })
         });
         const result = await response.json();
@@ -604,7 +656,7 @@ async function hapusDataPO(rowIndex) {
         if (modalBox) modalBox.style.display = "none";
 
         if (result.status === 'success') {
-            // Panggil modal sukses (ikon otomatis jadi centang hijau karena tipenya 'success')
+            // Panggil modal sukses
             await showCustomModal({
                 title: "Berhasil",
                 message: "Data PO berhasil dihapus!",
@@ -643,6 +695,7 @@ async function hapusDataPO(rowIndex) {
         if (btnConfirm) btnConfirm.style.display = "block";
     }
 }
+
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
