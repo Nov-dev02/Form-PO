@@ -10,6 +10,11 @@
       "src": "Favicon/Logo.svg",
       "sizes": "any",
       "type": "image/svg+xml"
+    },
+    {
+      "src": "Favicon/Logo.png",
+      "sizes": "192x192 512x512 3264x3264",
+      "type": "image/png"
     }
   ]
 }
