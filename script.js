@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMxaPzNaYATNn-zMyx36NvjYQ1iwjwKYbmpezRMxE_OYWUd-JveOUbFGVMApS1ZZDdvw/exec";
-let currentEditRowIndex = null;
+
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
@@ -241,7 +241,6 @@ async function handleLogin() {
     }
 }
 
-
 // --- GOOGLE OAUTH LOGIN HANDLER ---
 function handleGoogleLogin(response) {
     const responsePayload = parseJwt(response.credential);
@@ -273,7 +272,6 @@ function parseJwt(token) {
     }).join(''));
     return JSON.parse(jsonPayload);
 }
-
 
 async function loadMasterBarang() {
     try {
@@ -417,8 +415,8 @@ async function loadRiwayatPOData() {
                         <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
                         <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
                         <td style="padding: 10px; text-align: center; white-space: nowrap;">
-                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fas fa-edit"></i> Edit</button>
-                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fas fa-trash"></i> Hapus</button>
+                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
                         </td>
                     </tr>
                 `;
@@ -430,9 +428,10 @@ async function loadRiwayatPOData() {
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
-
     }
 }
+
+let currentEditRowIndex = null;
 
 function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     currentEditRowIndex = rowIndex;
@@ -464,61 +463,34 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     checkFormValidity();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 async function hapusDataPO(rowIndex) {
-    showCustomConfirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?", async () => {
-        try {
-            const response = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'deletePO',
-                    rowIndex: rowIndex
-                })
-            });
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                showCustomAlert("Data PO berhasil dihapus!");
-                loadRiwayatPOData();
-            } else {
-                showCustomAlert("Gagal menghapus data: " + result.message);
-            }
-        } catch (err) {
-            console.error(err);
-            showCustomAlert("Terjadi kesalahan koneksi saat menghapus data.");
-        }
-    });
-}
-
-function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
-    currentEditRowIndex = rowIndex;
-    
-    if (tanggal) {
-        try {
-            const d = new Date(tanggal);
-            if (!isNaN(d.getTime())) {
-                document.getElementById('poTanggal').value = d.toISOString().split('T')[0];
-            }
-        } catch(e) {
-            document.getElementById('poTanggal').value = getLocalDateString();
-        }
-    }
-    
-    document.getElementById('poKode').value = kode;
-    document.getElementById('poNama').value = nama;
-    document.getElementById('poPic').value = pic;
-    document.getElementById('poJumlah').value = jumlah;
-    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
-    
-    const btnSubmit = document.getElementById('btnSubmit');
-    if (btnSubmit) {
-        btnSubmit.innerHTML = "💾 Update Data PO";
-        btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+    if (!confirm("Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?")) {
+        return;
     }
 
-    closeRiwayatModal();
-    checkFormValidity();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deletePO',
+                rowIndex: rowIndex
+            })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert("Data PO berhasil dihapus!");
+            loadRiwayatPOData();
+        } else {
+            alert("Gagal menghapus data: " + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi saat menghapus data.");
+    }
 }
+
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
@@ -710,7 +682,6 @@ function onScanSuccess(decodedText, decodedResult) {
 
 function onScanFailure(error) {}
 
-// Fungsi Submit yang Otomatis Mendeteksi Mode Kirim Baru ATAU Update Edit
 async function submitPO(e) {
     if (e) e.preventDefault();
     const btn = document.getElementById('btnSubmit');
@@ -757,22 +728,11 @@ async function submitPO(e) {
                 msg.style.color = "#10b981";
                 msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
             }
-              if (Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then(function(registration) {
-                    registration.showNotification("Gudang Nuhsantara", {
-                      body: isEditMode ? "Data PO berhasil diperbarui di sistem!" : "Data PO baru berhasil dikirim ke server!",
-
-                        icon: "https://nov-dev02.github.io/Form-PO/Favicon/Logo.png", // Ganti dengan link PNG logo kamu yang valid
-                        badge: "https://nov-dev02.github.io/Form-PO/Favicon/Logo.png",
-                        vibrate: [200, 100, 200]
-                    });
-                });
-            }
 
             await new Promise(resolve => setTimeout(resolve, 800));
 
             if (document.getElementById('poForm')) document.getElementById('poForm').reset();
-
+            currentEditRowIndex = null; // Reset mode edit
 
             if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
             if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
@@ -871,14 +831,10 @@ function tambahJumlah(angka) {
     checkFormValidity();
 }
 
-// --- FUNGSI TRIGGER GOOGLE OAUTH ---
 function triggerGoogleLogin() {
-    // Memanggil prompt login Google secara otomatis saat tombol kustom diklik
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.prompt((notification) => {
             if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                // Fallback jika One Tap diblokir browser, arahkan user interaksi manual
-                console.log("Google One Tap prompt tidak muncul, periksa konfigurasi akun atau popup blocker.");
                 alert("Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.");
             }
         });
@@ -887,7 +843,6 @@ function triggerGoogleLogin() {
     }
 }
 
-// --- FITUR CUACA REAL-TIME (DENGAN PEMICU SENTUHAN PERTAMA & AUTO-FALLBACK) ---
 function initRealTimeWeather() {
     const tempEl = document.getElementById('weatherTemp');
     const condEl = document.getElementById('weatherCondition');
@@ -896,7 +851,6 @@ function initRealTimeWeather() {
 
     if (!tempEl) return;
 
-    // Fungsi utama untuk mengeksekusi GPS & Open-Meteo
     const fetchWeatherByGPS = () => {
         if (!navigator.geolocation) {
             fetchDefaultWeather(-7.275, 112.793);
@@ -908,10 +862,8 @@ function initRealTimeWeather() {
 
         let gpsResolved = false;
 
-        // Timer pengaman: Jika dalam 4 detik GPS tidak merespons, alihkan ke default Mulyorejo
         const fallbackTimer = setTimeout(() => {
             if (!gpsResolved) {
-                console.warn("GPS timeout, menggunakan lokasi default Mulyorejo.");
                 fetchDefaultWeather(-7.275, 112.793);
             }
         }, 4000);
@@ -925,7 +877,6 @@ function initRealTimeWeather() {
                 const lon = position.coords.longitude;
 
                 try {
-                    // 1. Ambil nama wilayah menggunakan Reverse Geocoding
                     const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
                     const geoData = await geoRes.json();
                     
@@ -933,7 +884,6 @@ function initRealTimeWeather() {
                     const wilayah = address.village || address.suburb || address.city_district || address.city || "Lokasi Anda";
                     if(locEl) locEl.textContent = wilayah;
 
-                    // 2. Ambil data cuaca dari Open-Meteo API
                     const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
                     const weatherData = await weatherRes.json();
 
@@ -954,8 +904,7 @@ function initRealTimeWeather() {
             (error) => {
                 gpsResolved = true;
                 clearTimeout(fallbackTimer);
-                console.warn("Izin lokasi ditolak:", error.message);
-                fetchDefaultWeather(-7.275, 112.793); // Fallback ke Mulyorejo jika ditolak
+                fetchDefaultWeather(-7.275, 112.793);
             }, 
             { 
                 enableHighAccuracy: false, 
@@ -965,10 +914,8 @@ function initRealTimeWeather() {
         );
     };
 
-    // Trik Pemancing Izin: Tangkap sentuhan/klik pertama user di layar agar browser merestui pop-up GPS
     const triggerPermissionOnTouch = () => {
         fetchWeatherByGPS();
-        // Hapus listener setelah sentuhan pertama agar tidak terpanggil terus
         window.removeEventListener('click', triggerPermissionOnTouch);
         window.removeEventListener('touchstart', triggerPermissionOnTouch);
     };
@@ -977,7 +924,6 @@ function initRealTimeWeather() {
     window.addEventListener('touchstart', triggerPermissionOnTouch, { once: true });
 }
 
-// Fungsi cadangan / default jika GPS gagal atau ditolak
 async function fetchDefaultWeather(lat, lon) {
     try {
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
@@ -999,7 +945,6 @@ async function fetchDefaultWeather(lat, lon) {
     }
 }
 
-// Helper pengubah kode cuaca API ke teks Indonesia dan ikon Font Awesome
 function getWeatherDescription(code) {
     if (code === 0) return { text: "Cerah", icon: "fa-solid fa-sun" };
     if (code >= 1 && code <= 3) return { text: "Berawan", icon: "fa-solid fa-cloud-sun" };
@@ -1010,152 +955,46 @@ function getWeatherDescription(code) {
     if (code >= 95 && code <= 99) return { text: "Badai Petir", icon: "fa-solid fa-cloud-bolt" };
     return { text: "Berawan", icon: "fa-solid fa-cloud" };
 }
-function showCustomConfirm(message, onYes) {
-    // Cek apakah modal kustom sudah ada di HTML, kalau belum buat secara otomatis
-    let modalOverlay = document.getElementById('customConfirmModal');
-    if (!modalOverlay) {
-        modalOverlay = document.createElement('div');
-        modalOverlay.id = 'customConfirmModal';
-        modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;';
-        modalOverlay.innerHTML = `
-            <div style="background: #1e293b; border: 1px solid #334155; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; color: #f8fafc; font-family: inherit;">
-                <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;" id="customConfirmText"></div>
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                    <button id="btnCustomNo" style="flex: 1; padding: 10px; background: #334155; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Batal</button>
-                    <button id="btnCustomYes" style="flex: 1; padding: 10px; background: #ef4444; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Ya, Hapus</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modalOverlay);
-    }
 
-    document.getElementById('customConfirmText').innerText = message;
-    modalOverlay.style.display = 'flex';
+// =========================================================================
+// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS (H-1)
+// =========================================================================
 
-    const btnYes = document.getElementById('btnCustomYes');
-    const btnNo = document.getElementById('btnCustomNo');
+async function cekRekapOtomatis() {
+  const namaPicLogin = localStorage.getItem('po_user') || "";
+  if (!namaPicLogin) return; // Jika belum login, abaikan
 
-    // Bersihkan event listener sebelumnya supaya tidak menumpuk
-    const newBtnYes = btnYes.cloneNode(true);
-    const newBtnNo = btnNo.cloneNode(true);
-    btnYes.parentNode.replaceChild(newBtnYes, btnYes);
-    btnNo.parentNode.replaceChild(newBtnNo, btnNo);
-
-    newBtnYes.addEventListener('click', () => {
-        modalOverlay.style.display = 'none';
-        onYes();
-    });
-
-    newBtnNo.addEventListener('click', () => {
-        modalOverlay.style.display = 'none';
-    });
-}
-
-function showCustomAlert(message) {
-    let alertOverlay = document.getElementById('customAlertModal');
-    if (!alertOverlay) {
-        alertOverlay = document.createElement('div');
-        alertOverlay.id = 'customAlertModal';
-        alertOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;';
-        alertOverlay.innerHTML = `
-            <div style="background: #1e293b; border: 1px solid #334155; padding: 24px; border-radius: 12px; width: 90%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; color: #f8fafc; font-family: inherit;">
-                <div style="font-size: 15px; font-weight: 500; margin-bottom: 20px; line-height: 1.5;" id="customAlertText"></div>
-                <button id="btnCustomOk" style="width: 100%; padding: 10px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">OK</button>
-            </div>
-        `;
-        document.body.appendChild(alertOverlay);
-    }
-
-    document.getElementById('customAlertText').innerText = message;
-    alertOverlay.style.display = 'flex';
-
-    const btnOk = document.getElementById('btnCustomOk');
-    const newBtnOk = btnOk.cloneNode(true);
-    btnOk.parentNode.replaceChild(newBtnOk, btnOk);
-
-    newBtnOk.addEventListener('click', () => {
-        alertOverlay.style.display = 'none';
-    });
-}
-// Konfigurasi Firebase Web (Nanti disesuaikan dengan project Firebase kamu)
-const firebaseConfig = {
-  apiKey: "AIzaSyDgegl7vymJ6X9CxKBkUrmWTJFYlGC_ULY",
-  projectId: "gudang-nuhsantara",
-  messagingSenderId: "698331638433",
-  appId: "1:698331638433:web:f49f1b4675c487aca7dee0"
-};
-
-// Inisialisasi Firebase di Frontend
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
-
-
-// Fungsi untuk meminta izin notifikasi ke HP
-async function requestNotificationPermission() {
   try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      console.log('Izin notifikasi diberikan.');
-      
-      // Daftarkan Service Worker secara manual dengan path sub-folder '/Form-PO/firebase-messaging-sw.js'
-      const serviceWorkerRegistration = await navigator.serviceWorker.register('/Form-PO/firebase-messaging-sw.js');
-      
-      // Ambil Token FCM dengan menyertakan serviceWorkerRegistration
-      const token = await messaging.getToken({ 
-        vapidKey: 'BJjHYx5EzWY4X7ym1-2QEHfzDX8gk3PXqeaxa1qmaZXThERVNTNTNvflidqcPvG4MVWc4c2icU40XTw5QNQQN9o',
-        serviceWorkerRegistration: serviceWorkerRegistration
-      });
-      
-      if (token) {
-        console.log('FCM Token perangkat:', token);
-        
-        // Simpan token ini ke Google Sheets/Database supaya bisa dikirimi pesan otomatis!
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'saveFCMToken',
-                token: token,
-                user: localStorage.getItem('po_user') || 'Operator Gudang'
-            })
-        })
-        .then(res => res.json())
-        .then(res => console.log('Token berhasil disimpan di Sheets:', res))
-        .catch(err => console.error('Gagal simpan token:', err));
+    const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}`);
+    const hasil = await response.json();
+    
+    if (hasil.status === "success") {
+      // Kunci unik berdasarkan tanggal rekap DAN nama PIC supaya hanya muncul sekali sehari per device
+      const kunciHariIni = `notif_rekap_kemarin_${hasil.tanggal}_${namaPicLogin}`;
+      const sudahMuncul = localStorage.getItem(kunciHariIni);
 
-      } else {
-        console.warn('Gagal mendapatkan token FCM.');
+      if (!sudahMuncul) {
+        let pesanNotifikasi = "";
+        
+        if (hasil.totalPO > 0) {
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: kemarin kamu berhasil memproses ${hasil.totalPO} PO!`;
+        } else {
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: kemarin tidak ada catatan PO baru atas namamu.`;
+        }
+        
+        // Munculkan sebagai Pop-up Alert di HP PIC yang bersangkutan
+        alert(pesanNotifikasi);
+        
+        // Simpan status agar tidak muncul berulang-ulang di hari yang sama pada device ini
+        localStorage.setItem(kunciHariIni, "true");
       }
-    } else {
-      console.log('Izin notifikasi ditolak.');
     }
-  } catch (error) {
-    console.error('Terjadi kesalahan saat meminta izin notifikasi:', error);
+  } catch (err) {
+    console.error("Gagal memuat rekap otomatis PIC:", err);
   }
 }
-// --- FITUR AUTO-TRIGGER NOTIFIKASI DENGAN SENTUHAN PERTAMA ---
-function initAutoNotificationTrigger() {
-    // Cek apakah izin sudah pernah diberikan atau ditolak sebelumnya
-    if (Notification.permission === 'granted' || Notification.permission === 'denied') {
-        return; // Kalau sudah di-izinkan atau diblokir, tidak usah dipancing lagi
-    }
 
-    const triggerNotificationOnTouch = () => {
-        console.log("Pengguna menyentuh layar, memicu permintaan izin notifikasi...");
-        
-        // Panggil fungsi minta izin yang sudah kita buat
-        requestNotificationPermission();
-
-        // Hapus listener setelah sentuhan pertama agar tidak terpanggil terus-menerus
-        window.removeEventListener('click', triggerNotificationOnTouch);
-        window.removeEventListener('touchstart', triggerNotificationOnTouch);
-    };
-
-    // Pasang perangkap klik/sentuh di seluruh jendela browser
-    window.addEventListener('click', triggerNotificationOnTouch, { once: true });
-    window.addEventListener('touchstart', triggerNotificationOnTouch, { once: true });
-}
-
-// Jalankan fungsi ini saat halaman dimuat
+// Jalankan pengecekan otomatis setelah aplikasi berhasil dimuat di HP PIC
 window.addEventListener('DOMContentLoaded', () => {
-    initAutoNotificationTrigger();
+  setTimeout(cekRekapOtomatis, 2000);
 });
