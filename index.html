@@ -66,7 +66,7 @@
                 </svg>
             </div>
 
-                        <div class="header-login">
+            <div class="header-login">
                 <h2>Login Gudang</h2>
                 <div class="real-time-clock clock">00:00:00</div>
             </div>
@@ -100,44 +100,42 @@
                 <div id="loginError" class="error-msg"></div>
             </form>
 
+            <!-- Garis Pemisah / Divider -->
+            <div style="display: flex; align-items: center; margin: 16px 0; color: #64748b; font-size: 12px;">
+                <div style="flex: 1; height: 1px; background: #334155;"></div>
+                <span style="padding: 0 10px;">Atau</span>
+                <div style="flex: 1; height: 1px; background: #334155;"></div>
+            </div>
 
-                <!-- Garis Pemisah / Divider -->
-                <div style="display: flex; align-items: center; margin: 16px 0; color: #64748b; font-size: 12px;">
-                    <div style="flex: 1; height: 1px; background: #334155;"></div>
-                    <span style="padding: 0 10px;">Atau</span>
-                    <div style="flex: 1; height: 1px; background: #334155;"></div>
-                </div>
+            <!-- Tombol Custom Continue with Google yang Sinkron dengan Tema -->
+            <button type="button" id="btnGoogleLogin" onclick="triggerGoogleLogin()" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; padding: 12px; margin-top: 8px; transition: all 0.2s ease;">
+                <i class="fab fa-google" style="font-size: 16px;"></i>
+                <span>Lanjutkan dengan Google</span>
+            </button>
 
-                <!-- Tombol Custom Continue with Google yang Sinkron dengan Tema -->
-<button type="button" id="btnGoogleLogin" onclick="triggerGoogleLogin()" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; padding: 12px; margin-top: 8px; transition: all 0.2s ease;">
-    <i class="fab fa-google" style="font-size: 16px;"></i>
-    <span>Lanjutkan dengan Google</span>
-</button>
+            <!-- Container tersembunyi untuk inisialisasi Google API asli di belakang layar -->
+            <div id="g_id_onload"
+                 data-client_id="95796216574-oh3m6ch1vhqo7r1necjbntvs33p2p0sp.apps.googleusercontent.com"
+                 data-callback="handleGoogleLogin"
+                 data-auto_prompt="false"
+                 style="display: none;">
+            </div>
+            
+            <div class="social-area">
+                <div class="social-label">Sosial Media</div>
+                <ul class="social-list">
+                    <li style="--clr: #1877f2;"><a href="https://www.facebook.com/share/19SnivRaFn/" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+                    <li style="--clr: #e1306c;"><a href="https://www.instagram.com/novan.arifki?stkn=MWIxczdzMDNqb2JvMg==" target="_blank"><i class="fab fa-instagram"></i></a></li>
+                    <li style="--clr: #ff0050;"><a href="https://www.tiktok.com/@novanarifki2?_r=1&_t=ZS-99inoYcem1t" target="_blank"><i class="fab fa-tiktok"></i></a></li>
+                    <li style="--clr: #ff0000;"><a href="https://youtube.com/@tkreggaemusic?si=4VlILbHVgAQ4IThP" target="_blank"><i class="fab fa-youtube"></i></a></li>
+                    <li style="--clr: #25d366;"><a href="Https://wa.me/6287762756779" target="_blank"><i class="fab fa-whatsapp"></i></a></li>
+                </ul>
 
-<!-- Container tersembunyi untuk inisialisasi Google API asli di belakang layar -->
-<div id="g_id_onload"
-     data-client_id="95796216574-oh3m6ch1vhqo7r1necjbntvs33p2p0sp.apps.googleusercontent.com"
-     data-callback="handleGoogleLogin"
-     data-auto_prompt="false"
-     style="display: none;">
-</div>
-                
-                <div class="social-area">
-                    <div class="social-label">Sosial Media</div>
-                    <ul class="social-list">
-                        <li style="--clr: #1877f2;"><a href="https://www.facebook.com/share/19SnivRaFn/" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
-                        <li style="--clr: #e1306c;"><a href="https://www.instagram.com/novan.arifki?stkn=MWIxczdzMDNqb2JvMg==" target="_blank"><i class="fab fa-instagram"></i></a></li>
-                        <li style="--clr: #ff0050;"><a href="https://www.tiktok.com/@novanarifki2?_r=1&_t=ZS-99inoYcem1t" target="_blank"><i class="fab fa-tiktok"></i></a></li>
-                        <li style="--clr: #ff0000;"><a href="https://youtube.com/@tkreggaemusic?si=4VlILbHVgAQ4IThP" target="_blank"><i class="fab fa-youtube"></i></a></li>
-                        <li style="--clr: #25d366;"><a href="Https://wa.me/6287762756779" target="_blank"><i class="fab fa-whatsapp"></i></a></li>
-                    </ul>
-
-                    <div class="social-label">Github Repository</div>
-                    <ul class="social-list" style="margin-bottom: 0 !important;">
-                        <li style="--clr: #ffffff;"><a href="https://github.com/Nov-dev02?tab=repositories" target="_blank"><i class="fab fa-github"></i></a></li>
-                    </ul>
-                </div>
-            </form>
+                <div class="social-label">Github Repository</div>
+                <ul class="social-list" style="margin-bottom: 0 !important;">
+                    <li style="--clr: #ffffff;"><a href="https://github.com/Nov-dev02?tab=repositories" target="_blank"><i class="fab fa-github"></i></a></li>
+                </ul>
+            </div>
         </div>
 
         <!-- PO Form Section -->
@@ -156,7 +154,7 @@
                 </div>
             </div>
 
-            <!-- [FITUR BARU] Widget Cuaca Real-Time dipindah ke sini agar melebar penuh & rapi -->
+            <!-- Widget Cuaca Real-Time -->
             <div id="weatherWidget" style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; backdrop-filter: blur(5px);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div id="weatherIconContainer" style="font-size: 24px; color: #38bdf8;">
@@ -253,28 +251,53 @@
                 <button type="button" class="btn-close-modal" onclick="closeRiwayatModal()">&times;</button>
             </div>
             <div style="max-height: 380px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
-                <!-- Bagian dalam Modal Riwayat PO (index.html) -->
-<table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
-    <thead>
-        <tr style="background: rgba(255,255,255,0.06); color: #fff; position: sticky; top: 0; z-index: 2;">
-            <th style="padding: 10px; border-bottom: 1px solid #334155;">Tanggal</th>
-            <th style="padding: 10px; border-bottom: 1px solid #334155;">Kode Barang</th>
-            <th style="padding: 10px; border-bottom: 1px solid #334155;">Nama Barang</th>
-            <th style="padding: 10px; border-bottom: 1px solid #334155;">PIC</th>
-            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: right;">Jumlah</th>
-            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: center;">Aksi</th> <!-- Kolom Baru -->
-        </tr>
-    </thead>
-    <tbody id="modalRiwayatTableBody">
-        <tr>
-            <td colspan="6" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
-        </tr>
-    </tbody>
-</table>
-</div>
+                <table style="width: 100%; border-collapse: collapse; color: #ddd; font-size: 11px; text-align: left;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.06); color: #fff; position: sticky; top: 0; z-index: 2;">
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Tanggal</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Kode Barang</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">Nama Barang</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155;">PIC</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: right;">Jumlah</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #334155; text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalRiwayatTableBody">
+                        <tr>
+                            <td colspan="6" style="padding: 20px; text-align: center; color: #888;">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <div style="margin-top: 14px; text-align: right;">
                 <button type="button" onclick="closeRiwayatModal()" style="padding: 8px 18px; background: #334155; border: none; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Tutup</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CUSTOM MODERN MODAL & NOTIFICATION SYSTEM  -->
+    <!-- ========================================== -->
+    <div id="customModalBox" style="display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px); padding: 20px;">
+        <div id="modalContentWrapper" style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; width: 100%; max-width: 380px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5); text-align: center; transform: scale(0.9); opacity: 0; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
+            
+            <!-- Icon / Emoji -->
+            <div id="modalIconContainer" style="width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                <i id="modalIcon" class="fa-solid fa-circle-info"></i>
+            </div>
+
+            <!-- Title -->
+            <h3 id="modalTitle" style="color: #f8fafc; font-size: 18px; font-weight: 700; margin: 0 0 8px 0;">Notifikasi</h3>
+
+            <!-- Message -->
+            <p id="modalMessage" style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 0 0 20px 0; word-break: break-word;">Pesan informasi sistem gudang...</p>
+
+            <!-- Buttons Container -->
+            <div id="modalButtonsContainer" style="display: flex; gap: 10px;">
+                <button type="button" id="modalBtnCancel" style="display: none; flex: 1; padding: 10px; background: #334155; border: none; color: #cbd5e1; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 13px; transition: background 0.2s;">Batal</button>
+                <button type="button" id="modalBtnConfirm" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; color: #ffffff; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); transition: transform 0.1s;">OK</button>
+            </div>
+
         </div>
     </div>
 
