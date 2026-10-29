@@ -1317,3 +1317,15 @@ function showForceNotificationModal() {
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkAndForceNotification, 1500);
 });
+// Pendaftaran Service Worker untuk PWA & Push Notification
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./firebase-messaging-sw.js')
+            .then((registration) => {
+                console.log('Service Worker berhasil didaftarkan dengan scope: ', registration.scope);
+            })
+            .catch((err) => {
+                console.log('Gagal mendaftarkan Service Worker: ', err);
+            });
+    });
+}     
