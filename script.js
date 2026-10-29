@@ -1185,21 +1185,30 @@ async function cekRekapOtomatis() {
             type: "success"
         });
 
-        // 2. Munculkan juga di Atas Layar HP (Push Notification Browser)
+        // 2. Munculkan Banner di Atas Layar HP via Service Worker (Android Friendly)
         if (Notification.permission === "granted") {
-            new Notification("📦 Rekap Gudang Nuhsantara", {
-                body: pesanNotifikasi,
-                icon: "Favicon/Logo.png"
-            });
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification("📦 Rekap Gudang Nuhsantara", {
+                        body: pesanNotifikasi,
+                        icon: "Favicon/Logo.png",
+                        badge: "Favicon/Logo.png",
+                        vibrate: [200, 100, 200]
+                    });
+                }).catch(function(err) {
+                    // Fallback jika service worker belum siap
+                    new Notification("📦 Rekap Gudang Nuhsantara", {
+                        body: pesanNotifikasi,
+                        icon: "Favicon/Logo.png"
+                    });
+                });
+            } else {
+                new Notification("📦 Rekap Gudang Nuhsantara", {
+                    body: pesanNotifikasi,
+                    icon: "Favicon/Logo.png"
+                });
+            }
         }
-        
-        localStorage.setItem(kunciHariIni, "true");
-      }
-    }
-  } catch (err) {
-    console.error("Gagal memuat rekap otomatis PIC:", err);
-  }
-}
 
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
