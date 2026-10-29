@@ -1194,24 +1194,41 @@ async function cekRekapOtomatis() {
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(cekRekapOtomatis, 2000);
 });
+
 // ==========================================
-// 🔔 MODAL PAKSA IZIN NOTIFIKASI (HANYA SEKALI)
+// 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
 // ==========================================
 
+async function registerFCMTokenToServer(tokenValue) {
+    const currentUser = localStorage.getItem('po_user') || "Operator Gudang";
+    if (!tokenValue) return;
+
+    try {
+        await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'saveFCMToken',
+                user: currentUser,
+                token: tokenValue
+            })
+        });
+        console.log("Token perangkat berhasil didaftarkan ke server.");
+    } catch (err) {
+        console.error("Gagal mendaftarkan token FCM:", err);
+    }
+}
+
 function checkAndForceNotification() {
-    // 1. Cek apakah browser mendukung Web Notification
     if (!("Notification" in window)) {
         console.log("Browser ini tidak mendukung sistem notifikasi.");
         return;
     }
 
-    // 2. Jika izin sudah 'granted' atau sudah pernah disimpan di localStorage, lewatkan!
     if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
         console.log("Izin notifikasi sudah aktif sebelumnya.");
         return;
     }
 
-    // 3. Jika belum diizinkan, tampilkan modal paksa penutup layar
     showForceNotificationModal();
 }
 
@@ -1250,18 +1267,21 @@ function showForceNotificationModal() {
         modal.style.display = 'flex';
     }
 
-    // Event listener saat tombol diklik oleh user
     document.getElementById('btnAllowNotif').onclick = async () => {
         try {
             const permission = await Notification.requestPermission();
             if (permission === "granted") {
-                // Simpan status ke localStorage supaya tidak muncul lagi selamanya di HP ini
                 localStorage.setItem("gudang_notif_allowed", "true");
-                
-                // Sembunyikan modal
                 modal.style.display = 'none';
                 
-                // Berikan notifikasi tes sambutan
+                let deviceToken = localStorage.getItem("gudang_device_token");
+                if (!deviceToken) {
+                    deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+                    localStorage.setItem("gudang_device_token", deviceToken);
+                }
+                
+                registerFCMTokenToServer(deviceToken);
+
                 new Notification("Sistem PO Gudang 📦", {
                     body: "Terima kasih! Notifikasi berhasil diaktifkan dan siap menerima rekap harian.",
                     icon: "Favicon/Logo.png"
@@ -1279,8 +1299,6 @@ function showForceNotificationModal() {
     };
 }
 
-// Integrasikan pengecekan ke dalam event saat aplikasi dimuat
 window.addEventListener('DOMContentLoaded', () => {
-    // Beri jeda 1.5 detik setelah splash screen selesai agar mulus
     setTimeout(checkAndForceNotification, 1500);
 });
