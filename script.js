@@ -1,8 +1,80 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
+const CURRENT_APP_VERSION = "v1.2.0"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
+
+// ==========================================
+// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
+// ==========================================
+async function cekPembaruanAplikasi() {
+    try {
+        const response = await fetch('./version.json?t=' + Date.now());
+        const data = await response.json();
+        
+        if (data.version && data.version !== CURRENT_APP_VERSION) {
+            tampilkanModalPaksaUpdate();
+        }
+    } catch (err) {
+        // Jika file version.json belum sempat dibuat, abaikan agar aplikasi tetap berjalan normal
+        console.log("Auto-update check skipped or version.json not found.");
+    }
+}
+
+function tampilkanModalPaksaUpdate() {
+    let modal = document.getElementById('forceUpdateModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'forceUpdateModal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); display: flex; justify-content: center;
+            align-items: center; z-index: 9999999; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(8px);
+        `;
+        modal.innerHTML = `
+            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+                <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 26px; color: #38bdf8;">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </div>
+                <h3 style="margin-bottom: 12px; font-size: 20px; font-weight: 700; color: #f8fafc;">Pembaruan Sistem Tersedia</h3>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
+                    Versi baru Gudang Nuhsantara dengan fitur notifikasi rekap otomatis telah dirilis. Silakan perbarui sekarang untuk melanjutkan.
+                </p>
+                <button id="btnExecuteUpdate" style="
+                    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 14px 20px;
+                    border-radius: 12px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                ">
+                    Perbarui Sekarang
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        modal.style.display = 'flex';
+    }
+
+    document.getElementById('btnExecuteUpdate').onclick = async () => {
+        // 1. Bersihkan Service Worker lama di HP teman
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for(let registration of registrations) {
+                await registration.unregister();
+            }
+        }
+        // 2. Bersihkan Cache Storage
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            for(let name of cacheNames) {
+                await caches.delete(name);
+            }
+        }
+        // 3. Muat ulang paksa dari server (bypass cache)
+        window.location.reload(true);
+    };
+}
 
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
@@ -197,6 +269,9 @@ window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
     initRealTimeWeather();
+    
+    // Cek pembaruan otomatis dari server saat aplikasi dimuat
+    cekPembaruanAplikasi();
     
     const today = getLocalDateString();
     const poTanggal = document.getElementById('poTanggal');
@@ -547,6 +622,7 @@ function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
     checkFormValidity();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // ==========================================
 // 🗑️ FUNGSI HAPUS DATA PO (Auto-Close & Auto-Refresh)
 // ==========================================
@@ -564,7 +640,6 @@ async function hapusDataPO(rowIndex) {
         return;
     }
 
-    // Tampilkan modal loading manual
     const modalBox = document.getElementById('customModalBox');
     const wrapper = document.getElementById('modalContentWrapper');
     const titleEl = document.getElementById('modalTitle');
@@ -603,7 +678,6 @@ async function hapusDataPO(rowIndex) {
         const result = await response.json();
 
         if (result.status === 'success') {
-            // Ubah konten modal jadi pesan Sukses dengan centang hijau
             if (titleEl) titleEl.textContent = "Berhasil";
             if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
             if (iconContainer) {
@@ -613,10 +687,8 @@ async function hapusDataPO(rowIndex) {
                 iconContainer.style.color = "#10b981";
             }
 
-            // Tunggu 1.5 detik supaya pesan suksesnya sempat terbaca user
             await new Promise(resolve => setTimeout(resolve, 1500));
 
-            // Tutup modal secara otomatis
             if (wrapper) {
                 wrapper.style.transform = "scale(0.9)";
                 wrapper.style.opacity = "0";
@@ -624,7 +696,6 @@ async function hapusDataPO(rowIndex) {
             await new Promise(resolve => setTimeout(resolve, 200));
             if (modalBox) modalBox.style.display = "none";
 
-            // Refresh tabel riwayat otomatis
             loadRiwayatPOData();
         } else {
             if (wrapper) {
@@ -663,6 +734,7 @@ async function hapusDataPO(rowIndex) {
         if (btnConfirm) btnConfirm.style.display = "block";
     }
 }
+
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
     const popupSearch = document.getElementById('popupSearch');
@@ -1171,21 +1243,18 @@ async function cekRekapOtomatis() {
       if (!sudahMuncul) {
         let pesanNotifikasi = "";
         
-        // Menyesuaikan pesan berdasarkan frekuensi PO mereka
         if (hasil.totalPO > 0) {
           pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
         } else {
           pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: belum ada catatan PO atas namamu hari ini.`;
         }
         
-        // 1. Munculkan Modal Cantik di Tengah Layar
         await showCustomModal({
             title: "📊 Rekap Gudang Harian",
             message: pesanNotifikasi,
             type: "success"
         });
 
-        // 2. Munculkan Banner di Atas Layar HP via Service Worker (Android Friendly)
         if (Notification.permission === "granted") {
             if ("serviceWorker" in navigator) {
                 navigator.serviceWorker.ready.then(function(registration) {
@@ -1196,7 +1265,6 @@ async function cekRekapOtomatis() {
                         vibrate: [200, 100, 200]
                     });
                 }).catch(function(err) {
-                    // Fallback jika service worker belum siap
                     new Notification("📦 Rekap Gudang Nuhsantara", {
                         body: pesanNotifikasi,
                         icon: "Favicon/Logo.png"
