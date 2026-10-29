@@ -1165,23 +1165,33 @@ async function cekRekapOtomatis() {
     const hasil = await response.json();
     
     if (hasil.status === "success") {
-      const kunciHariIni = `notif_rekap_kemarin_${hasil.tanggal}_${namaPicLogin}`;
+      const kunciHariIni = `notif_rekap_${hasil.tanggal}_${namaPicLogin}`;
       const sudahMuncul = localStorage.getItem(kunciHariIni);
 
       if (!sudahMuncul) {
         let pesanNotifikasi = "";
         
+        // Menyesuaikan pesan berdasarkan frekuensi PO mereka
         if (hasil.totalPO > 0) {
-          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: kemarin kamu berhasil memproses ${hasil.totalPO} PO!`;
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
         } else {
-          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: kemarin tidak ada catatan PO baru atas namamu.`;
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: belum ada catatan PO atas namamu hari ini.`;
         }
         
+        // 1. Munculkan Modal Cantik di Tengah Layar
         await showCustomModal({
-            title: "Rekap Gudang",
+            title: "📊 Rekap Gudang Harian",
             message: pesanNotifikasi,
-            type: "info"
+            type: "success"
         });
+
+        // 2. Munculkan juga di Atas Layar HP (Push Notification Browser)
+        if (Notification.permission === "granted") {
+            new Notification("📦 Rekap Gudang Nuhsantara", {
+                body: pesanNotifikasi,
+                icon: "Favicon/Logo.png"
+            });
+        }
         
         localStorage.setItem(kunciHariIni, "true");
       }
@@ -1190,10 +1200,6 @@ async function cekRekapOtomatis() {
     console.error("Gagal memuat rekap otomatis PIC:", err);
   }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(cekRekapOtomatis, 2000);
-});
 
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
