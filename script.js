@@ -1194,3 +1194,93 @@ async function cekRekapOtomatis() {
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(cekRekapOtomatis, 2000);
 });
+// ==========================================
+// 🔔 MODAL PAKSA IZIN NOTIFIKASI (HANYA SEKALI)
+// ==========================================
+
+function checkAndForceNotification() {
+    // 1. Cek apakah browser mendukung Web Notification
+    if (!("Notification" in window)) {
+        console.log("Browser ini tidak mendukung sistem notifikasi.");
+        return;
+    }
+
+    // 2. Jika izin sudah 'granted' atau sudah pernah disimpan di localStorage, lewatkan!
+    if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
+        console.log("Izin notifikasi sudah aktif sebelumnya.");
+        return;
+    }
+
+    // 3. Jika belum diizinkan, tampilkan modal paksa penutup layar
+    showForceNotificationModal();
+}
+
+function showForceNotificationModal() {
+    let modal = document.getElementById('forceNotificationModal');
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'forceNotificationModal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); display: flex; justify-content: center;
+            align-items: center; z-index: 999999; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(8px);
+        `;
+        modal.innerHTML = `
+            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 26px; color: #38bdf8;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h3 style="margin-bottom: 12px; font-size: 20px; font-weight: 700; color: #f8fafc;">Aktifkan Notifikasi</h3>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
+                    Mohon aktifkan izin notifikasi agar kamu bisa menerima rekap harian PO dan informasi penting dari Gudang Nuhsantara secara tepat waktu.
+                </p>
+                <button id="btnAllowNotif" style="
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 20px;
+                    border-radius: 12px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transition: transform 0.1s;
+                ">
+                    Izinkan Notifikasi Sekarang
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        modal.style.display = 'flex';
+    }
+
+    // Event listener saat tombol diklik oleh user
+    document.getElementById('btnAllowNotif').onclick = async () => {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                // Simpan status ke localStorage supaya tidak muncul lagi selamanya di HP ini
+                localStorage.setItem("gudang_notif_allowed", "true");
+                
+                // Sembunyikan modal
+                modal.style.display = 'none';
+                
+                // Berikan notifikasi tes sambutan
+                new Notification("Sistem PO Gudang 📦", {
+                    body: "Terima kasih! Notifikasi berhasil diaktifkan dan siap menerima rekap harian.",
+                    icon: "Favicon/Logo.png"
+                });
+            } else {
+                await showCustomModal({
+                    title: "Izin Ditolak",
+                    message: "Aplikasi memerlukan izin notifikasi agar dapat digunakan oleh tim gudang!",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            console.error("Gagal meminta izin notifikasi:", error);
+        }
+    };
+}
+
+// Integrasikan pengecekan ke dalam event saat aplikasi dimuat
+window.addEventListener('DOMContentLoaded', () => {
+    // Beri jeda 1.5 detik setelah splash screen selesai agar mulus
+    setTimeout(checkAndForceNotification, 1500);
+});
