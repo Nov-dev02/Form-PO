@@ -1209,6 +1209,14 @@ async function cekRekapOtomatis() {
                 });
             }
         }
+        
+        localStorage.setItem(kunciHariIni, "true");
+      }
+    }
+  } catch (err) {
+    console.error("Gagal memuat rekap otomatis PIC:", err);
+  }
+}
 
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
@@ -1317,6 +1325,7 @@ function showForceNotificationModal() {
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkAndForceNotification, 1500);
 });
+
 // Pendaftaran Service Worker untuk PWA & Push Notification
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1328,4 +1337,4 @@ if ('serviceWorker' in navigator) {
                 console.log('Gagal mendaftarkan Service Worker: ', err);
             });
     });
-}     
+}
