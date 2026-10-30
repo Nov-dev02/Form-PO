@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.3.1"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
+const CURRENT_APP_VERSION = "v1.3.2"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -56,33 +56,41 @@ function tampilkanModalPaksaUpdate() {
         modal.style.display = 'flex';
     }
 
-   document.getElementById('btnExecuteUpdate').onclick = async () => {
+  document.getElementById('btnExecuteUpdate').onclick = async () => {
         const btn = document.getElementById('btnExecuteUpdate');
-        btn.innerText = "Memperbarui sistem...";
+        btn.innerText = "Membersihkan Cache...";
         btn.disabled = true;
 
         try {
-            // Unregister semua Service Worker
+            // 1. Hancurkan semua Service Worker
             if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                for (let registration of registrations) {
-                    await registration.unregister();
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (let reg of regs) {
+                    await reg.unregister();
                 }
             }
 
-            // Hapus semua Cache Storage
+            // 2. Babat habis seluruh Cache Storage browser
             if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                for (let name of cacheNames) {
-                    await caches.delete(name);
+                const keys = await caches.keys();
+                for (let key of keys) {
+                    await caches.delete(key);
                 }
             }
+
+            // 3. Bersihkan SessionStorage & LocalStorage terkait cache versi
+            localStorage.clear();
+            sessionStorage.clear();
+
         } catch (e) {
-            console.log("Cleanup error:", e);
+            console.log("Error clearing storage:", e);
         }
 
-        // Lempar paksa ke URL dengan timestamp acak agar browser wajib download ulang file baru dari GitHub
-        window.location.href = window.location.origin + window.location.pathname + '?force_reload=' + Date.now();
+        // 4. JURUS PAMUNGKAS: Lempar paksa ke URL eksternal-dummy sejenak 
+        // agar browser wajib membuang total memori cache aktif, lalu balik lagi ke aplikasi utama!
+        setTimeout(() => {
+            window.location.href = './index.html?v=' + Date.now() + '&reload=true';
+        }, 800);
     };
 }
 // ==========================================
