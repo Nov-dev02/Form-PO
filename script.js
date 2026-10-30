@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.3.3"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
+const CURRENT_APP_VERSION = "v1.3.1"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -10,19 +10,18 @@ let isScannerActive = false;
 // ==========================================
 async function cekPembaruanAplikasi() {
     try {
-        const response = await fetch('./version.json?t=' + Date.now());
+        // Tambahkan parameter acak agar version.json tidak pernah di-cache oleh browser
+        const response = await fetch('./version.json?v=' + Date.now(), { cache: 'no-store' });
         const data = await response.json();
         
-        // Kotak alert tes kita hapus total supaya tidak mengganggu alur aplikasi
-
+        // Cek apakah versi server lebih baru dari versi yang kita tentukan
         if (data.version && data.version !== CURRENT_APP_VERSION) {
             tampilkanModalPaksaUpdate();
         }
     } catch (err) {
-        console.log("Auto-update check skipped or version.json not found.");
+        console.log("Auto-update check skipped:", err);
     }
 }
-
 function tampilkanModalPaksaUpdate() {
     let modal = document.getElementById('forceUpdateModal');
     if (!modal) {
@@ -57,13 +56,13 @@ function tampilkanModalPaksaUpdate() {
         modal.style.display = 'flex';
     }
 
-    document.getElementById('btnExecuteUpdate').onclick = async () => {
+   document.getElementById('btnExecuteUpdate').onclick = async () => {
         const btn = document.getElementById('btnExecuteUpdate');
         btn.innerText = "Memperbarui sistem...";
         btn.disabled = true;
 
         try {
-            // 1. Unregister semua Service Worker yang nyangkut
+            // Unregister semua Service Worker
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 for (let registration of registrations) {
@@ -71,26 +70,19 @@ function tampilkanModalPaksaUpdate() {
                 }
             }
 
-            // 2. Hapus semua data Cache Storage
+            // Hapus semua Cache Storage
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 for (let name of cacheNames) {
                     await caches.delete(name);
                 }
             }
-
-            // 3. Hapus penyimpanan lokal sementara jika ada
-            localStorage.removeItem('app_version_cache');
-            
-            // Beri jeda 1 detik agar proses OS/browser benar-benar bersih
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (err) {
-            console.log("Gagal membersihkan cache:", err);
+        } catch (e) {
+            console.log("Cleanup error:", e);
         }
 
-        // 4. Paksa reload total dengan cache-busting timestamp mutlak
-        window.location.replace(window.location.pathname + '?update=' + Date.now());
+        // Lempar paksa ke URL dengan timestamp acak agar browser wajib download ulang file baru dari GitHub
+        window.location.href = window.location.origin + window.location.pathname + '?force_reload=' + Date.now();
     };
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
