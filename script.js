@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.3.2"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
+const CURRENT_APP_VERSION = "v1.3.3"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -62,35 +62,35 @@ function tampilkanModalPaksaUpdate() {
         btn.disabled = true;
 
         try {
-            // 1. Hancurkan semua Service Worker
+            // 1. Hancurkan semua Service Worker & tunggu sampai tuntas
             if ('serviceWorker' in navigator) {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                for (let reg of regs) {
-                    await reg.unregister();
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
                 }
             }
 
             // 2. Babat habis seluruh Cache Storage browser
             if ('caches' in window) {
-                const keys = await caches.keys();
-                for (let key of keys) {
-                    await caches.delete(key);
+                const cacheNames = await caches.keys();
+                for (let name of cacheNames) {
+                    await caches.delete(name);
                 }
             }
 
-            // 3. Bersihkan SessionStorage & LocalStorage terkait cache versi
+            // 3. Bersihkan Storage
             localStorage.clear();
             sessionStorage.clear();
+
+            // Beri jeda waktu 1.2 detik agar sistem HP selesai mengeksekusi penghapusan total
+            await new Promise(resolve => setTimeout(resolve, 1200));
 
         } catch (e) {
             console.log("Error clearing storage:", e);
         }
 
-        // 4. JURUS PAMUNGKAS: Lempar paksa ke URL eksternal-dummy sejenak 
-        // agar browser wajib membuang total memori cache aktif, lalu balik lagi ke aplikasi utama!
-        setTimeout(() => {
-            window.location.href = './index.html?v=' + Date.now() + '&reload=true';
-        }, 800);
+        // 4. Lempar paksa ke URL dengan membersihkan Service Worker scope
+        window.location.replace(window.location.origin + window.location.pathname + '?clear_cache=' + Date.now());
     };
 }
 // ==========================================
