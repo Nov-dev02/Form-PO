@@ -13,8 +13,7 @@ async function cekPembaruanAplikasi() {
         const response = await fetch('./version.json?t=' + Date.now());
         const data = await response.json();
         
-        // Test pop-up alert versi server vs lokal
-        alert("Server: " + data.version + " | Lokal: " + CURRENT_APP_VERSION);
+        // Kotak alert tes kita hapus total supaya tidak mengganggu alur aplikasi
 
         if (data.version && data.version !== CURRENT_APP_VERSION) {
             tampilkanModalPaksaUpdate();
@@ -23,6 +22,7 @@ async function cekPembaruanAplikasi() {
         console.log("Auto-update check skipped or version.json not found.");
     }
 }
+
 function tampilkanModalPaksaUpdate() {
     let modal = document.getElementById('forceUpdateModal');
     if (!modal) {
@@ -58,25 +58,36 @@ function tampilkanModalPaksaUpdate() {
     }
 
     document.getElementById('btnExecuteUpdate').onclick = async () => {
-        // 1. Bersihkan Service Worker lama di HP teman
-        if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for(let registration of registrations) {
-                await registration.unregister();
+        // Ubah teks tombol jadi proses loading biar user tahu sedang bekerja
+        const btn = document.getElementById('btnExecuteUpdate');
+        btn.innerText = "Memperbarui...";
+        btn.disabled = true;
+
+        try {
+            // 1. Bersihkan Service Worker lama
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for(let registration of registrations) {
+                    await registration.unregister();
+                }
             }
-        }
-        // 2. Bersihkan Cache Storage
-        if ('caches' in window) {
-            const cacheNames = await caches.keys();
-            for(let name of cacheNames) {
-                await caches.delete(name);
+            // 2. Bersihkan seluruh Cache Storage
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for(let name of cacheNames) {
+                    await caches.delete(name);
+                }
             }
+            // Beri jeda 0.5 detik agar pembersihan cache selesai sempurna di HP
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (e) {
+            console.log("Gagal membersihkan cache:", e);
         }
-        // 3. Muat ulang paksa dari server (bypass cache)
-        window.location.reload(true);
+
+        // 3. Muat ulang halaman secara bersih dengan parameter cache-busting
+        window.location.href = window.location.pathname + '?v=' + Date.now();
     };
 }
-
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
