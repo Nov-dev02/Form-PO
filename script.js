@@ -84,6 +84,7 @@ function tampilkanModalPaksaUpdate() {
         // Lempar paksa ke URL dengan timestamp acak agar browser wajib download ulang file baru dari GitHub
         window.location.href = window.location.origin + window.location.pathname + '?force_reload=' + Date.now();
     };
+}
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
