@@ -62,7 +62,7 @@ function tampilkanModalPaksaUpdate() {
         btn.disabled = true;
 
         try {
-            // 1. Hancurkan semua Service Worker & tunggu sampai tuntas
+            // 1. Hentikan dan unregister seluruh Service Worker aktif
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 for (let registration of registrations) {
@@ -70,7 +70,7 @@ function tampilkanModalPaksaUpdate() {
                 }
             }
 
-            // 2. Babat habis seluruh Cache Storage browser
+            // 2. Kosongkan semua Cache Storage browser secara paksa
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 for (let name of cacheNames) {
@@ -78,19 +78,19 @@ function tampilkanModalPaksaUpdate() {
                 }
             }
 
-            // 3. Bersihkan Storage
+            // 3. Bersihkan seluruh penyimpanan lokal
             localStorage.clear();
             sessionStorage.clear();
 
-            // Beri jeda waktu 1.2 detik agar sistem HP selesai mengeksekusi penghapusan total
-            await new Promise(resolve => setTimeout(resolve, 1200));
+            // Beri jeda 1.5 detik agar sistem HP selesai mengeksekusi penghapusan total di latar belakang
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
         } catch (e) {
             console.log("Error clearing storage:", e);
         }
 
-        // 4. Lempar paksa ke URL dengan membersihkan Service Worker scope
-        window.location.replace(window.location.origin + window.location.pathname + '?clear_cache=' + Date.now());
+        // 4. Alihkan paksa menggunakan assignment assign dengan parameter pembersih cache tingkat lanjut
+        window.location.assign(window.location.origin + window.location.pathname + '?v=' + CURRENT_APP_VERSION + '&t=' + Date.now());
     };
 }
 // ==========================================
