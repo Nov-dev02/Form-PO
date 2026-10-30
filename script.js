@@ -13,15 +13,16 @@ async function cekPembaruanAplikasi() {
         const response = await fetch('./version.json?t=' + Date.now());
         const data = await response.json();
         
+        // Test pop-up alert versi server vs lokal
+        alert("Server: " + data.version + " | Lokal: " + CURRENT_APP_VERSION);
+
         if (data.version && data.version !== CURRENT_APP_VERSION) {
             tampilkanModalPaksaUpdate();
         }
     } catch (err) {
-        // Jika file version.json belum sempat dibuat, abaikan agar aplikasi tetap berjalan normal
         console.log("Auto-update check skipped or version.json not found.");
     }
 }
-
 function tampilkanModalPaksaUpdate() {
     let modal = document.getElementById('forceUpdateModal');
     if (!modal) {
