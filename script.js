@@ -6,23 +6,26 @@ let html5QrCode = null;
 let isScannerActive = false;
 
 // ==========================================
-// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
+// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM (FINAL FIX)
 // ==========================================
 async function cekPembaruanAplikasi() {
     try {
-        // Tambahkan parameter acak agar version.json tidak pernah di-cache oleh browser
         const response = await fetch('./version.json?v=' + Date.now(), { cache: 'no-store' });
         const data = await response.json();
         
-        // Cek apakah versi server lebih baru dari versi yang kita tentukan
-        if (data.version && data.version !== CURRENT_APP_VERSION) {
-            tampilkanModalPaksaUpdate();
+        const versiTersimpan = localStorage.getItem('gudang_skip_version');
+
+        // Modal hanya muncul jika versi server ada, berbeda dari versi kodingan, 
+        // DAN belum pernah di-skip lewat tombol update sebelumnya.
+        if (data.version && data.version !== CURRENT_APP_VERSION && versiTersimpan !== data.version) {
+            tampilkanModalPaksaUpdate(data.version);
         }
     } catch (err) {
         console.log("Auto-update check skipped:", err);
     }
 }
-function tampilkanModalPaksaUpdate() {
+
+function tampilkanModalPaksaUpdate(targetVersion) {
     let modal = document.getElementById('forceUpdateModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -56,41 +59,39 @@ function tampilkanModalPaksaUpdate() {
         modal.style.display = 'flex';
     }
 
-  document.getElementById('btnExecuteUpdate').onclick = async () => {
+    document.getElementById('btnExecuteUpdate').onclick = async () => {
         const btn = document.getElementById('btnExecuteUpdate');
-        btn.innerText = "Membersihkan Cache...";
+        btn.innerText = "Memperbarui...";
         btn.disabled = true;
 
         try {
-            // 1. Hentikan dan unregister seluruh Service Worker aktif
+            // 1. Simpan tanda bahwa versi ini sudah di-update oleh user agar tidak melintir lagi
+            localStorage.setItem('gudang_skip_version', targetVersion);
+
+            // 2. Hancurkan Service Worker
             if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                for (let registration of registrations) {
-                    await registration.unregister();
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (let reg of regs) {
+                    await reg.unregister();
                 }
             }
 
-            // 2. Kosongkan semua Cache Storage browser secara paksa
+            // 3. Bersihkan Cache Storage
             if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                for (let name of cacheNames) {
-                    await caches.delete(name);
+                const keys = await caches.keys();
+                for (let key of keys) {
+                    await caches.delete(key);
                 }
             }
 
-            // 3. Bersihkan seluruh penyimpanan lokal
-            localStorage.clear();
-            sessionStorage.clear();
-
-            // Beri jeda 1.5 detik agar sistem HP selesai mengeksekusi penghapusan total di latar belakang
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
+            await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (e) {
-            console.log("Error clearing storage:", e);
+            console.log("Cleanup error:", e);
         }
 
-        // 4. Alihkan paksa menggunakan assignment assign dengan parameter pembersih cache tingkat lanjut
-        window.location.assign(window.location.origin + window.location.pathname + '?v=' + CURRENT_APP_VERSION + '&t=' + Date.now());
+        // 4. Tutup modal secara instan dan lanjutkan aplikasi
+        modal.style.display = 'none';
+        window.location.reload(true);
     };
 }
 // ==========================================
