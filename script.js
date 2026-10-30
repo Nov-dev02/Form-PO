@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.3.2"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
+const CURRENT_APP_VERSION = "v1.3.3"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -58,36 +58,40 @@ function tampilkanModalPaksaUpdate() {
     }
 
     document.getElementById('btnExecuteUpdate').onclick = async () => {
-        // Ubah teks tombol jadi proses loading biar user tahu sedang bekerja
         const btn = document.getElementById('btnExecuteUpdate');
-        btn.innerText = "Memperbarui...";
+        btn.innerText = "Memperbarui sistem...";
         btn.disabled = true;
 
         try {
-            // 1. Bersihkan Service Worker lama
+            // 1. Unregister semua Service Worker yang nyangkut
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for(let registration of registrations) {
+                for (let registration of registrations) {
                     await registration.unregister();
                 }
             }
-            // 2. Bersihkan seluruh Cache Storage
+
+            // 2. Hapus semua data Cache Storage
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
-                for(let name of cacheNames) {
+                for (let name of cacheNames) {
                     await caches.delete(name);
                 }
             }
-            // Beri jeda 0.5 detik agar pembersihan cache selesai sempurna di HP
-            await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (e) {
-            console.log("Gagal membersihkan cache:", e);
+
+            // 3. Hapus penyimpanan lokal sementara jika ada
+            localStorage.removeItem('app_version_cache');
+            
+            // Beri jeda 1 detik agar proses OS/browser benar-benar bersih
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+        } catch (err) {
+            console.log("Gagal membersihkan cache:", err);
         }
 
-        // 3. Muat ulang halaman secara bersih dengan parameter cache-busting
-        window.location.href = window.location.pathname + '?v=' + Date.now();
+        // 4. Paksa reload total dengan cache-busting timestamp mutlak
+        window.location.replace(window.location.pathname + '?update=' + Date.now());
     };
-}
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
