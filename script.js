@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.0.0"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
+const CURRENT_APP_VERSION = "v1.2.2"; // 🚀 Update versi terbaru
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -15,8 +15,6 @@ async function cekPembaruanAplikasi() {
         
         const versiTersimpan = localStorage.getItem('gudang_skip_version');
 
-        // Modal hanya muncul jika versi server ada, berbeda dari versi kodingan, 
-        // DAN belum pernah di-skip lewat tombol update sebelumnya.
         if (data.version && data.version !== CURRENT_APP_VERSION && versiTersimpan !== data.version) {
             tampilkanModalPaksaUpdate(data.version);
         }
@@ -65,10 +63,8 @@ function tampilkanModalPaksaUpdate(targetVersion) {
         btn.disabled = true;
 
         try {
-            // 1. Simpan tanda bahwa versi ini sudah di-update oleh user agar tidak melintir lagi
             localStorage.setItem('gudang_skip_version', targetVersion);
 
-            // 2. Hancurkan Service Worker
             if ('serviceWorker' in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
                 for (let reg of regs) {
@@ -76,7 +72,6 @@ function tampilkanModalPaksaUpdate(targetVersion) {
                 }
             }
 
-            // 3. Bersihkan Cache Storage
             if ('caches' in window) {
                 const keys = await caches.keys();
                 for (let key of keys) {
@@ -89,11 +84,11 @@ function tampilkanModalPaksaUpdate(targetVersion) {
             console.log("Cleanup error:", e);
         }
 
-        // 4. Tutup modal secara instan dan lanjutkan aplikasi
         modal.style.display = 'none';
         window.location.reload(true);
     };
 }
+
 // ==========================================
 // 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
@@ -118,7 +113,6 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
         if (btnConfirm) btnConfirm.textContent = confirmText;
         if (btnCancel) btnCancel.textContent = cancelText;
 
-        // Atur Ikon & Warna Tema Berdasarkan Tipe secara aman
         if (iconEl && iconContainer && btnConfirm) {
             if (type === 'success') {
                 iconEl.className = "fa-solid fa-check";
@@ -155,7 +149,6 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
             btnCancel.style.display = showCancel ? "block" : "none";
         }
 
-        // Tampilkan Modal dengan Animasi Smooth
         modalBox.style.display = "flex";
         setTimeout(() => {
             wrapper.style.transform = "scale(1)";
@@ -287,8 +280,6 @@ window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
     initRealTimeWeather();
-    
-    // Cek pembaruan otomatis dari server saat aplikasi dimuat
     cekPembaruanAplikasi();
     
     const today = getLocalDateString();
@@ -333,8 +324,14 @@ function tampilkanFormPO(username) {
     
     setDynamicGreeting(username);
     loadMasterBarang();
+    
+    // Panggil pengecekan/pendaftaran FCM token otomatis berdasarkan user yang login
+    setTimeout(checkAndForceNotification, 1500);
 }
 
+// ==========================================
+// 🟢 PERBAIKAN UTAMA: HANDLE LOGIN (ANTI INFINITE LOADING)
+// ==========================================
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -356,10 +353,10 @@ async function handleLogin() {
     if (btnLogin) {
         btnLogin.disabled = true;
         btnLogin.style.opacity = "0.7";
+        btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
     }
 
     try {
-        if (btnLogin) btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
         if (errDiv) {
             errDiv.style.color = "#38bdf8";
             errDiv.innerText = "Menghubungkan ke server...";
@@ -375,36 +372,34 @@ async function handleLogin() {
         });
         const result = await response.json();
 
+        // Selalu kembalikan tombol ke kondisi normal sebelum berpindah/menampilkan pesan
+        if (btnLogin) {
+            btnLogin.innerHTML = "Login";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
+        }
+
         if (result.status === 'success') {
             if (errDiv) {
                 errDiv.style.color = "#10b981";
                 errDiv.innerText = "Akses diterima! Membuka sistem...";
             }
-            await new Promise(resolve => setTimeout(resolve, 600));
+            await new Promise(resolve => setTimeout(resolve, 400));
 
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
             
-            if (btnLogin) {
-                btnLogin.innerHTML = "Login";
-                btnLogin.disabled = false;
-                btnLogin.style.opacity = "1";
-            }
             if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
         } else {
-            if (btnLogin) {
-                btnLogin.innerHTML = "Login";
-                btnLogin.disabled = false;
-                btnLogin.style.opacity = "1";
-            }
             if (errDiv) {
                 errDiv.style.color = "#ef4444";
                 errDiv.innerText = result.message || "Username atau password salah!";
             }
         }
     } catch (err) {
+        // Pastikan tombol di-reset kembali meski terjadi error jaringan
         if (btnLogin) {
             btnLogin.innerHTML = "Login";
             btnLogin.disabled = false;
@@ -1243,9 +1238,8 @@ function getWeatherDescription(code) {
 }
 
 // =========================================================================
-// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS (H-1)
+// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS
 // =========================================================================
-
 async function cekRekapOtomatis() {
   const namaPicLogin = localStorage.getItem('po_user') || "";
   if (!namaPicLogin) return;
@@ -1307,12 +1301,10 @@ async function cekRekapOtomatis() {
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
 // ==========================================
-
 async function registerFCMTokenToServer(tokenValue) {
-    // Ambil nama user yang sedang aktif login, jika kosong jangan asal isi "Operator Gudang"
+    // 🟢 Mengambil nama user asli yang sedang aktif login dari localStorage
     const currentUser = localStorage.getItem('po_user');
     
-    // Kalau belum login atau namanya kosong, batalkan pengiriman token atau tandai sebagai "Guest"
     if (!tokenValue || !currentUser) {
         console.log("Token atau user belum siap, pendaftaran FCM ditunda.");
         return;
@@ -1323,7 +1315,7 @@ async function registerFCMTokenToServer(tokenValue) {
             method: 'POST',
             body: JSON.stringify({
                 action: 'saveFCMToken',
-                user: currentUser, // Sekarang dijamin isinya nama asli user!
+                user: currentUser, // Terkirim akurat sesuai nama user yang login!
                 token: tokenValue
             })
         });
@@ -1333,7 +1325,6 @@ async function registerFCMTokenToServer(tokenValue) {
     }
 }
 
-
 function checkAndForceNotification() {
     if (!("Notification" in window)) {
         console.log("Browser ini tidak mendukung sistem notifikasi.");
@@ -1341,7 +1332,12 @@ function checkAndForceNotification() {
     }
 
     if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
-        console.log("Izin notifikasi sudah aktif sebelumnya.");
+        let deviceToken = localStorage.getItem("gudang_device_token");
+        if (!deviceToken) {
+            deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+            localStorage.setItem("gudang_device_token", deviceToken);
+        }
+        registerFCMTokenToServer(deviceToken);
         return;
     }
 
@@ -1361,7 +1357,7 @@ function showForceNotificationModal() {
             backdrop-filter: blur(8px);
         `;
         modal.innerHTML = `
-            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
                 <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 26px; color: #38bdf8;">
                     <i class="fa-solid fa-bell"></i>
                 </div>
@@ -1372,7 +1368,7 @@ function showForceNotificationModal() {
                 <button id="btnAllowNotif" style="
                     background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 20px;
                     border-radius: 12px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transition: transform 0.1s;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
                 ">
                     Izinkan Notifikasi Sekarang
                 </button>
@@ -1414,10 +1410,6 @@ function showForceNotificationModal() {
         }
     };
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(checkAndForceNotification, 1500);
-});
 
 // Pendaftaran Service Worker untuk PWA & Push Notification
 if ('serviceWorker' in navigator) {
