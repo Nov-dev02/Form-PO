@@ -1309,23 +1309,30 @@ async function cekRekapOtomatis() {
 // ==========================================
 
 async function registerFCMTokenToServer(tokenValue) {
-    const currentUser = localStorage.getItem('po_user') || "Operator Gudang";
-    if (!tokenValue) return;
+    // Ambil nama user yang sedang aktif login, jika kosong jangan asal isi "Operator Gudang"
+    const currentUser = localStorage.getItem('po_user');
+    
+    // Kalau belum login atau namanya kosong, batalkan pengiriman token atau tandai sebagai "Guest"
+    if (!tokenValue || !currentUser) {
+        console.log("Token atau user belum siap, pendaftaran FCM ditunda.");
+        return;
+    }
 
     try {
         await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'saveFCMToken',
-                user: currentUser,
+                user: currentUser, // Sekarang dijamin isinya nama asli user!
                 token: tokenValue
             })
         });
-        console.log("Token perangkat berhasil didaftarkan ke server.");
+        console.log("Token perangkat berhasil didaftarkan ke server atas nama:", currentUser);
     } catch (err) {
         console.error("Gagal mendaftarkan token FCM:", err);
     }
 }
+
 
 function checkAndForceNotification() {
     if (!("Notification" in window)) {
