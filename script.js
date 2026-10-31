@@ -720,19 +720,24 @@ function initRealTimeWeather() {
 // 🔔 REGISTRASI FCM TOKEN & NOTIFIKASI
 // ==========================================
 async function registerFCMTokenToServer(tokenValue) {
+    // Ambil nama user yang sedang login saat itu
     const currentUser = localStorage.getItem('po_user');
-    if (!tokenValue || !currentUser) return;
+    
+    if (!tokenValue || !currentUser) {
+        console.log("Token atau user belum siap.");
+        return;
+    }
 
     try {
         await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'saveFCMToken',
-                user: currentUser, // Terkirim nama user yang valid!
+                user: currentUser, // Kirim nama user asli yang login, BUKAN kosong atau "Operator Gudang"
                 token: tokenValue
             })
         });
-        console.log("FCM Token terdaftar atas nama:", currentUser);
+        console.log("FCM Token berhasil terdaftar atas nama:", currentUser);
     } catch (err) {
         console.error("Gagal daftar FCM:", err);
     }
@@ -740,7 +745,18 @@ async function registerFCMTokenToServer(tokenValue) {
 
 function checkAndForceNotification() {
     if (!("Notification" in window)) return;
-    if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") return;
+    
+    // Kalau sudah diizinkan sebelumnya, pastikan token tetap terkirim dengan user yang aktif
+    if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
+        let deviceToken = localStorage.getItem("gudang_device_token");
+        if (!deviceToken) {
+            deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+            localStorage.setItem("gudang_device_token", deviceToken);
+        }
+        registerFCMTokenToServer(deviceToken);
+        return;
+    }
+
     showForceNotificationModal();
 }
 
@@ -756,10 +772,21 @@ function showForceNotificationModal() {
             backdrop-filter: blur(8px);
         `;
         modal.innerHTML = `
-            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff;">
-                <h3 style="margin-bottom: 12px; font-size: 20px; color: #f8fafc;">Aktifkan Notifikasi</h3>
-                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px;">Mohon aktifkan izin notifikasi untuk menerima rekap harian.</p>
-                <button id="btnAllowNotif" style="background: #10b981; color: white; border: none; padding: 14px 20px; border-radius: 12px; font-weight: 600; width: 100%; cursor: pointer;">Izinkan Notifikasi</button>
+            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+                <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 26px; color: #38bdf8;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h3 style="margin-bottom: 12px; font-size: 20px; font-weight: 700; color: #f8fafc;">Aktifkan Notifikasi</h3>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
+                    Mohon aktifkan izin notifikasi agar kamu bisa menerima rekap harian PO dan informasi penting dari Gudang Nuhsantara secara tepat waktu.
+                </p>
+                <button id="btnAllowNotif" style="
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 20px;
+                    border-radius: 12px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+                ">
+                    Izinkan Notifikasi Sekarang
+                </button>
             </div>
         `;
         document.body.appendChild(modal);
@@ -768,17 +795,36 @@ function showForceNotificationModal() {
     }
 
     document.getElementById('btnAllowNotif').onclick = async () => {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-            localStorage.setItem("gudang_notif_allowed", "true");
-            modal.style.display = 'none';
-            
-            let deviceToken = localStorage.getItem("gudang_device_token");
-            if (!deviceToken) {
-                deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
-                localStorage.setItem("gudang_device_token", deviceToken);
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                localStorage.setItem("gudang_notif_allowed", "true");
+                modal.style.display = 'none';
+                
+                let deviceToken = localStorage.getItem("gudang_device_token");
+                if (!deviceToken) {
+                    deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+                    localStorage.setItem("gudang_device_token", deviceToken);
+                }
+                
+                // Kirim token beserta nama user yang sedang login
+                registerFCMTokenToServer(deviceToken);
+
+                new Notification("Sistem PO Gudang 📦", {
+                    body: "Terima kasih! Notifikasi berhasil diaktifkan dan siap menerima rekap harian.",
+                    icon: "Favicon/Logo.png"
+                });
+            } else {
+                modal.style.display = 'none';
+                console.log("Izin notifikasi ditolak user.");
             }
-            registerFCMTokenToServer(deviceToken);
+        } catch (error) {
+            console.error("Gagal meminta izin notifikasi:", error);
         }
     };
 }
+
+// Pastikan fungsi pengecekan dipanggil otomatis saat halaman form PO terbuka setelah login
+setTimeout(() => {
+    checkAndForceNotification();
+}, 2000);
