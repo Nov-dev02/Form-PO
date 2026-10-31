@@ -1,19 +1,22 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.2.1"; // 🚀 Update versi perbaikan
+const CURRENT_APP_VERSION = "v1.0.0"; // 🚀 Ubah versi ini setiap kali kamu melakukan update script ke depannya
 
 let masterBarang = [];
 let html5QrCode = null;
 let isScannerActive = false;
 
 // ==========================================
-// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM
+// 🚀 AUTO-UPDATE & FORCE REFRESH SYSTEM (FINAL FIX)
 // ==========================================
 async function cekPembaruanAplikasi() {
     try {
         const response = await fetch('./version.json?v=' + Date.now(), { cache: 'no-store' });
         const data = await response.json();
+        
         const versiTersimpan = localStorage.getItem('gudang_skip_version');
 
+        // Modal hanya muncul jika versi server ada, berbeda dari versi kodingan, 
+        // DAN belum pernah di-skip lewat tombol update sebelumnya.
         if (data.version && data.version !== CURRENT_APP_VERSION && versiTersimpan !== data.version) {
             tampilkanModalPaksaUpdate(data.version);
         }
@@ -40,7 +43,7 @@ function tampilkanModalPaksaUpdate(targetVersion) {
                 </div>
                 <h3 style="margin-bottom: 12px; font-size: 20px; font-weight: 700; color: #f8fafc;">Pembaruan Sistem Tersedia</h3>
                 <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
-                    Versi baru Gudang Nuhsantara telah dirilis. Silakan perbarui sekarang untuk melanjutkan.
+                    Versi baru Gudang Nuhsantara dengan fitur notifikasi rekap otomatis telah dirilis. Silakan perbarui sekarang untuk melanjutkan.
                 </p>
                 <button id="btnExecuteUpdate" style="
                     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 14px 20px;
@@ -62,27 +65,37 @@ function tampilkanModalPaksaUpdate(targetVersion) {
         btn.disabled = true;
 
         try {
+            // 1. Simpan tanda bahwa versi ini sudah di-update oleh user agar tidak melintir lagi
             localStorage.setItem('gudang_skip_version', targetVersion);
+
+            // 2. Hancurkan Service Worker
             if ('serviceWorker' in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
-                for (let reg of regs) { await reg.unregister(); }
+                for (let reg of regs) {
+                    await reg.unregister();
+                }
             }
+
+            // 3. Bersihkan Cache Storage
             if ('caches' in window) {
                 const keys = await caches.keys();
-                for (let key of keys) { await caches.delete(key); }
+                for (let key of keys) {
+                    await caches.delete(key);
+                }
             }
+
             await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (e) {
             console.log("Cleanup error:", e);
         }
 
+        // 4. Tutup modal secara instan dan lanjutkan aplikasi
         modal.style.display = 'none';
         window.location.reload(true);
     };
 }
-
 // ==========================================
-// 🎨 CUSTOM MODERN MODAL HELPER
+// 🎨 CUSTOM MODERN MODAL HELPER (Aman dari Null Error)
 // ==========================================
 function showCustomModal({ title = "Informasi", message = "", type = "info", showCancel = false, confirmText = "OK", cancelText = "Batal" }) {
     return new Promise((resolve) => {
@@ -95,13 +108,17 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
         const btnConfirm = document.getElementById('modalBtnConfirm');
         const btnCancel = document.getElementById('modalBtnCancel');
 
-        if (!modalBox || !wrapper) { resolve(true); return; }
+        if (!modalBox || !wrapper) {
+            resolve(true);
+            return;
+        }
 
         if (titleEl) titleEl.textContent = title;
         if (msgEl) msgEl.textContent = message;
         if (btnConfirm) btnConfirm.textContent = confirmText;
         if (btnCancel) btnCancel.textContent = cancelText;
 
+        // Atur Ikon & Warna Tema Berdasarkan Tipe secara aman
         if (iconEl && iconContainer && btnConfirm) {
             if (type === 'success') {
                 iconEl.className = "fa-solid fa-check";
@@ -109,29 +126,36 @@ function showCustomModal({ title = "Informasi", message = "", type = "info", sho
                 iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
                 iconContainer.style.color = "#10b981";
                 btnConfirm.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.4)";
             } else if (type === 'error') {
                 iconEl.className = "fa-solid fa-triangle-exclamation";
                 iconContainer.style.background = "rgba(239, 68, 68, 0.15)";
                 iconContainer.style.borderColor = "rgba(239, 68, 68, 0.4)";
                 iconContainer.style.color = "#ef4444";
                 btnConfirm.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.4)";
             } else if (type === 'warning') {
                 iconEl.className = "fa-solid fa-circle-question";
                 iconContainer.style.background = "rgba(245, 158, 11, 0.15)";
                 iconContainer.style.borderColor = "rgba(245, 158, 11, 0.4)";
                 iconContainer.style.color = "#f59e0b";
                 btnConfirm.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.4)";
             } else {
                 iconEl.className = "fa-solid fa-circle-info";
                 iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
                 iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
                 iconContainer.style.color = "#38bdf8";
                 btnConfirm.style.background = "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)";
+                btnConfirm.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
             }
         }
 
-        if (btnCancel) btnCancel.style.display = showCancel ? "block" : "none";
+        if (btnCancel) {
+            btnCancel.style.display = showCancel ? "block" : "none";
+        }
 
+        // Tampilkan Modal dengan Animasi Smooth
         modalBox.style.display = "flex";
         setTimeout(() => {
             wrapper.style.transform = "scale(1)";
@@ -169,36 +193,102 @@ function injectModernStyles() {
     style.innerHTML = `
         #btnLogin, #btnSubmit {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-            border: none !important; border-radius: 8px !important; font-weight: 600 !important;
-            transition: all 0.3s ease !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+        }
+        #btnLogin:hover:not(:disabled), #btnSubmit:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+        }
+        #btnLogin:active:not(:disabled), #btnSubmit:active:not(:disabled) {
+            transform: translateY(0) !important;
         }
         .modern-spinner {
-            display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #ffffff; border-radius: 50%; animation: spinBtn 0.8s linear infinite;
-            vertical-align: middle; margin-right: 8px;
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spinBtn 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
         }
-        @keyframes spinBtn { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinBtn {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     `;
     document.head.appendChild(style);
 }
 
 function updateRealTimeClock() {
     const now = new Date();
-    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    document.querySelectorAll('.real-time-clock').forEach(el => { el.textContent = timeString; });
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}:${seconds}`;
+    
+    document.querySelectorAll('.real-time-clock').forEach(el => {
+        el.textContent = timeString;
+    });
 }
 setInterval(updateRealTimeClock, 1000);
 
 function setDynamicGreeting(username) {
     const greetingEl = document.getElementById('userGreeting');
     if (!greetingEl) return;
-    greetingEl.innerHTML = `Selamat datang, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">Pastikan data PO tercatat dengan akurat.</span>`;
+    
+    const now = new Date();
+    const hour = now.getHours();
+    let waktu = "Malam";
+    let daftarMotivasi = [];
+    
+    if (hour >= 4 && hour < 11) {
+        waktu = "Pagi";
+        daftarMotivasi = [
+            "Awali hari dengan semangat baru dan catat inventaris dengan teliti!",
+            "Pagi yang cerah, semoga stok barang hari ini aman terkendali!",
+            "Semangat pagi! Jangan lupa senyum dan pastikan data PO akurat."
+        ];
+    } else if (hour >= 11 && hour < 15) {
+        waktu = "Siang";
+        daftarMotivasi = [
+            "Tetap fokus dan jaga produktivitas kerja di siang hari ini!",
+            "Udah jam siang, tetap semangat selesaikan tugas gudangnya ya!",
+            "Meskipun gerah di siang hari, pastikan input data tetap presisi!"
+        ];
+    } else if (hour >= 15 && hour < 18) {
+        waktu = "Sore";
+        daftarMotivasi = [
+            "Sebentar lagi jam pulang, selesaikan rekap PO dengan cermat ya!",
+            "Sore-sore gini tetap gaspol, rapikan sisa laporan gudang!",
+            "Hampir jam pulang, cek sekali lagi data barang masuknya biar pas."
+        ];
+    } else {
+        waktu = "Malam";
+        daftarMotivasi = [
+            "Kerja hebat! Pastikan semua data PO tercatat dengan akurat.",
+            "Lembur malam tetap produktif, jaga kesehatan ya bro!",
+            "Malam tenang, waktunya beresin tugas terakhir dengan teliti."
+        ];
+    }
+    
+    const motivasiAcak = daftarMotivasi[Math.floor(Math.random() * daftarMotivasi.length)];
+    greetingEl.innerHTML = `Selamat ${waktu}, <b>${username}</b>! <br><span style="font-size: 11px; color: #94a3b8;">${motivasiAcak}</span>`;
 }
 
 window.onload = function() {
     updateRealTimeClock();
     injectModernStyles();
     initRealTimeWeather();
+    
+    // Cek pembaruan otomatis dari server saat aplikasi dimuat
     cekPembaruanAplikasi();
     
     const today = getLocalDateString();
@@ -243,12 +333,8 @@ function tampilkanFormPO(username) {
     
     setDynamicGreeting(username);
     loadMasterBarang();
-
-    // Panggil notifikasi & pendaftaran FCM token setelah user login
-    setTimeout(checkAndForceNotification, 1500);
 }
 
-// 🟢 PERBAIKAN: Tombol Login tidak lagi nyangkut (infinite loading)
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -259,7 +345,10 @@ async function handleLogin() {
     const pass = passwordInput ? passwordInput.value.trim() : '';
 
     if (!user || !pass) {
-        if (errDiv) { errDiv.style.color = "#ef4444"; errDiv.innerText = "Username dan password wajib diisi!"; }
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.innerText = "Username dan password wajib diisi!";
+        }
         return;
     }
 
@@ -267,30 +356,49 @@ async function handleLogin() {
     if (btnLogin) {
         btnLogin.disabled = true;
         btnLogin.style.opacity = "0.7";
-        btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
     }
 
     try {
+        if (btnLogin) btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
+        if (errDiv) {
+            errDiv.style.color = "#38bdf8";
+            errDiv.innerText = "Menghubungkan ke server...";
+        }
+        
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'login', username: user, password: pass })
+            body: JSON.stringify({
+                action: 'login',
+                username: user,
+                password: pass
+            })
         });
         const result = await response.json();
 
-        // Kembalikan tombol ke kondisi normal sebelum pindah halaman
-        if (btnLogin) {
-            btnLogin.innerHTML = "Login";
-            btnLogin.disabled = false;
-            btnLogin.style.opacity = "1";
-        }
-
         if (result.status === 'success') {
+            if (errDiv) {
+                errDiv.style.color = "#10b981";
+                errDiv.innerText = "Akses diterima! Membuka sistem...";
+            }
+            await new Promise(resolve => setTimeout(resolve, 600));
+
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
+            
+            if (btnLogin) {
+                btnLogin.innerHTML = "Login";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
             if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
         } else {
+            if (btnLogin) {
+                btnLogin.innerHTML = "Login";
+                btnLogin.disabled = false;
+                btnLogin.style.opacity = "1";
+            }
             if (errDiv) {
                 errDiv.style.color = "#ef4444";
                 errDiv.innerText = result.message || "Username atau password salah!";
@@ -304,19 +412,42 @@ async function handleLogin() {
         }
         if (errDiv) {
             errDiv.style.color = "#ef4444";
-            errDiv.innerText = "Gagal terhubung ke server!";
+            errDiv.innerText = "Gagal terhubung ke server Apps Script!";
         }
         console.error(err);
     }
 }
 
-// 🟢 PERBAIKAN: Handler untuk tombol Google Login agar memberikan respon
-function triggerGoogleLogin() {
-    showCustomModal({
-        title: "Google Login",
-        message: "Silakan gunakan login username & password internal gudang terlebih dahulu.",
-        type: "info"
-    });
+// --- GOOGLE OAUTH LOGIN HANDLER ---
+function handleGoogleLogin(response) {
+    const responsePayload = parseJwt(response.credential);
+    const operatorName = responsePayload.name;
+    const operatorEmail = responsePayload.email;
+    
+    const errDiv = document.getElementById('loginError');
+    if (errDiv) {
+        errDiv.style.color = "#10b981";
+        errDiv.innerText = `Selamat datang, ${operatorName}! Membuka sistem...`;
+    }
+
+    setTimeout(() => {
+        const today = getLocalDateString();
+        localStorage.setItem('po_user', operatorName);
+        localStorage.setItem('po_email', operatorEmail);
+        localStorage.setItem('po_login_date', today);
+        
+        if (errDiv) errDiv.innerText = "";
+        tampilkanFormPO(operatorName);
+    }, 600);
+}
+
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
 }
 
 async function loadMasterBarang() {
@@ -330,7 +461,7 @@ async function loadMasterBarang() {
             masterBarang = result.data;
         }
     } catch (error) {
-        console.error("Gagal mengambil master barang:", error);
+        console.error("Gagal mengambil data dari Google Sheets:", error);
     }
 }
 
@@ -339,14 +470,25 @@ function renderList(data) {
     if (!container) return;
 
     if (!data || data.length === 0) {
-        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">Tidak ada barang ditemukan.</div>`;
+        container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                Tidak ada barang ditemukan.<br>
+                <button onclick="muatUlangMasterBarangManual()" style="margin-top: 10px; padding: 6px 14px; background: #3b82f6; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Muat Ulang Data</button>
+            </div>`;
         return;
     }
 
     container.innerHTML = data.map(item => {
-        let kode = item.kode_barang || item[0] || '-';
-        let nama = item.nama_barang || item[1] || '-';
-        let pic = item.pic || item[2] || '-';
+        let kode = '-', nama = '-', pic = '-';
+        if (Array.isArray(item)) {
+            kode = item[0] || '-';
+            nama = item[1] || '-';
+            pic = item[2] || '-';
+        } else if (typeof item === 'object' && item !== null) {
+            kode = item.kode_barang || item.kode || item.code || '-';
+            nama = item.nama_barang || item.nama || item.name || '-';
+            pic = item.pic || item.penanggung_jawab || '-';
+        }
         return `
             <div class="item-pilihan" onclick="pilihBarang('${escapeHtml(kode)}', '${escapeHtml(nama)}', '${escapeHtml(pic)}')">
                 <span class="item-kode">${kode}</span>
@@ -360,6 +502,15 @@ function escapeHtml(text) {
     return String(text).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+async function muatUlangMasterBarangManual() {
+    const container = document.getElementById('itemListPopup');
+    if (container) {
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #38bdf8; font-size: 13px;"><span class="modern-spinner"></span> Memuat data...</div>`;
+    }
+    await loadMasterBarang();
+    renderList(masterBarang);
+}
+
 function pilihBarang(kode, nama, pic) {
     document.getElementById('poKode').value = kode;
     document.getElementById('poNama').value = nama;
@@ -368,6 +519,13 @@ function pilihBarang(kode, nama, pic) {
     document.getElementById('popupSearch').style.display = 'none';
     stopCameraScanner();
     checkFormValidity();
+
+    setTimeout(() => {
+        const submitBtn = document.querySelector('#poSection button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 150);
 }
 
 function openRiwayatModal() {
@@ -384,7 +542,8 @@ function closeRiwayatModal() {
 async function loadRiwayatPOData() {
     const tbody = document.getElementById('modalRiwayatTableBody');
     if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="6" style="padding: 25px; text-align: center; color: #38bdf8;"><span class="modern-spinner"></span> Memuat riwayat...</td></tr>`;
+    
+    tbody.innerHTML = `<tr><td colspan="6" style="padding: 25px; text-align: center; color: #38bdf8;"><span class="modern-spinner"></span> Memuat seluruh riwayat PO...</td></tr>`;
 
     try {
         const response = await fetch(WEB_APP_URL, {
@@ -396,7 +555,7 @@ async function loadRiwayatPOData() {
         if (result.status === 'success' && Array.isArray(result.data)) {
             const rows = result.data;
             if (rows.length <= 1) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #888;">Belum ada data PO.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #888;">Belum ada data PO di spreadsheet.</td></tr>`;
                 return;
             }
 
@@ -411,48 +570,188 @@ async function loadRiwayatPOData() {
                     jumlah: rows[i][4] || '0'
                 });
             }
+
             formattedRows.reverse();
 
-            tbody.innerHTML = formattedRows.map(item => `
-                <tr style="border-bottom: 1px solid #1e293b;">
-                    <td style="padding: 10px; color: #94a3b8;">${item.tanggal}</td>
-                    <td style="padding: 10px; color: #38bdf8;">${item.kode}</td>
-                    <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
-                    <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
-                    <td style="padding: 10px; text-align: right; color: #34d399;">${item.jumlah}</td>
-                    <td style="padding: 10px; text-align: center;">
-                        <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = formattedRows.map(item => {
+                let tanggalStr = item.tanggal;
+                if (tanggalStr) {
+                    try {
+                        const d = new Date(tanggalStr);
+                        if (!isNaN(d.getTime())) {
+                            tanggalStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        }
+                    } catch(e) {}
+                }
+
+                return `
+                    <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 10px; white-space: nowrap; color: #94a3b8;">${tanggalStr}</td>
+                        <td style="padding: 10px; color: #38bdf8; font-weight: 500;">${item.kode}</td>
+                        <td style="padding: 10px; color: #f8fafc;">${item.nama}</td>
+                        <td style="padding: 10px; color: #cbd5e1;">${item.pic}</td>
+                        <td style="padding: 10px; text-align: right; font-weight: 600; color: #34d399;">${item.jumlah}</td>
+                        <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                            <button type="button" onclick="persiapkanEdit(${item.rowIndex}, '${item.tanggal}', '${item.kode}', '${item.nama}', '${item.pic}', '${item.jumlah}')" style="background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 4px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button type="button" onclick="hapusDataPO(${item.rowIndex})" style="background: #ef4444; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;"><i class="fa-solid fa-trash"></i> Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Gagal memuat data dari spreadsheet.</td></tr>`;
         }
     } catch (err) {
         console.error(err);
-    }
-}
-
-async function hapusDataPO(rowIndex) {
-    const isConfirmed = await showCustomModal({
-        title: "Konfirmasi Hapus",
-        message: "Yakin ingin menghapus data PO ini?",
-        type: "warning",
-        showCancel: true,
-        confirmText: "Ya, Hapus"
-    });
-    if (!isConfirmed) return;
-
-    try {
-        await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'deletePO', rowIndex: rowIndex })
-        });
-        loadRiwayatPOData();
-    } catch (err) {
-        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Terjadi kesalahan koneksi internet.</td></tr>`;
     }
 }
 
 let currentEditRowIndex = null;
+
+function persiapkanEdit(rowIndex, tanggal, kode, nama, pic, jumlah) {
+    currentEditRowIndex = rowIndex;
+    
+    if (tanggal) {
+        try {
+            const d = new Date(tanggal);
+            if (!isNaN(d.getTime())) {
+                document.getElementById('poTanggal').value = d.toISOString().split('T')[0];
+            }
+        } catch(e) {
+            document.getElementById('poTanggal').value = getLocalDateString();
+        }
+    }
+    
+    document.getElementById('poKode').value = kode;
+    document.getElementById('poNama').value = nama;
+    document.getElementById('poPic').value = pic;
+    document.getElementById('poJumlah').value = jumlah;
+    document.getElementById('triggerModal').textContent = `${kode} - ${nama}`;
+    
+    const btnSubmit = document.getElementById('btnSubmit');
+    if (btnSubmit) {
+        btnSubmit.innerHTML = "💾 Update Data PO";
+        btnSubmit.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+    }
+
+    closeRiwayatModal();
+    checkFormValidity();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ==========================================
+// 🗑️ FUNGSI HAPUS DATA PO (Auto-Close & Auto-Refresh)
+// ==========================================
+async function hapusDataPO(rowIndex) {
+    const isConfirmed = await showCustomModal({
+        title: "Konfirmasi Hapus",
+        message: "Apakah kamu yakin ingin menghapus data PO ini dari Form PO & Database_PO secara permanen?",
+        type: "warning",
+        showCancel: true,
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal"
+    });
+
+    if (!isConfirmed) {
+        return;
+    }
+
+    const modalBox = document.getElementById('customModalBox');
+    const wrapper = document.getElementById('modalContentWrapper');
+    const titleEl = document.getElementById('modalTitle');
+    const msgEl = document.getElementById('modalMessage');
+    const iconContainer = document.getElementById('modalIconContainer');
+    const btnConfirm = document.getElementById('modalBtnConfirm');
+    const btnCancel = document.getElementById('modalBtnCancel');
+
+    if (titleEl) titleEl.textContent = "Memproses...";
+    if (msgEl) msgEl.textContent = "Sedang menghapus data dari server, mohon tunggu sebentar...";
+    
+    if (iconContainer) {
+        iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-spinner fa-spin" style="color: #38bdf8;"></i>`;
+        iconContainer.style.background = "rgba(56, 189, 248, 0.15)";
+        iconContainer.style.borderColor = "rgba(56, 189, 248, 0.4)";
+        iconContainer.style.color = "#38bdf8";
+    }
+    
+    if (btnCancel) btnCancel.style.display = "none";
+    if (btnConfirm) btnConfirm.style.display = "none";
+
+    if (modalBox) modalBox.style.display = "flex";
+    if (wrapper) {
+        wrapper.style.transform = "scale(1)";
+        wrapper.style.opacity = "1";
+    }
+
+    try {
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'deletePO',
+                rowIndex: rowIndex
+            })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            if (titleEl) titleEl.textContent = "Berhasil";
+            if (msgEl) msgEl.textContent = "Data PO berhasil dihapus!";
+            if (iconContainer) {
+                iconContainer.innerHTML = `<i id="modalIcon" class="fa-solid fa-check" style="color: #10b981;"></i>`;
+                iconContainer.style.background = "rgba(16, 185, 129, 0.15)";
+                iconContainer.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                iconContainer.style.color = "#10b981";
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            if (wrapper) {
+                wrapper.style.transform = "scale(0.9)";
+                wrapper.style.opacity = "0";
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (modalBox) modalBox.style.display = "none";
+
+            loadRiwayatPOData();
+        } else {
+            if (wrapper) {
+                wrapper.style.transform = "scale(0.9)";
+                wrapper.style.opacity = "0";
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (modalBox) modalBox.style.display = "none";
+
+            showCustomModal({
+                title: "Gagal",
+                message: "Gagal menghapus data: " + result.message,
+                type: "error",
+                showCancel: false,
+                confirmText: "Tutup"
+            });
+        }
+    } catch (err) {
+        console.error(err);
+        
+        if (wrapper) {
+            wrapper.style.transform = "scale(0.9)";
+            wrapper.style.opacity = "0";
+        }
+        await new Promise(resolve => setTimeout(resolve, 200));
+        if (modalBox) modalBox.style.display = "none";
+
+        showCustomModal({
+            title: "Kesalahan",
+            message: "Terjadi kesalahan koneksi saat menghapus data.",
+            type: "error",
+            showCancel: false,
+            confirmText: "Tutup"
+        });
+    } finally {
+        if (btnConfirm) btnConfirm.style.display = "block";
+    }
+}
 
 function initEventListeners() {
     const triggerModal = document.getElementById('triggerModal');
@@ -568,12 +867,20 @@ async function startCameraScanner() {
 
         await html5QrCode.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
             onScanSuccess, 
             onScanFailure
         );
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
+        showCustomModal({
+            title: "Akses Kamera",
+            message: "Tidak dapat mengakses kamera: " + (err.message || err),
+            type: "error"
+        });
         readerDiv.style.display = 'none';
         if (titleScanner) titleScanner.textContent = "Scan QR";
         if (btnToggleScanner) btnToggleScanner.style.borderColor = '#10b981';
@@ -602,7 +909,7 @@ async function stopCameraScanner() {
     isScannerActive = false;
 }
 
-function onScanSuccess(decodedText, decodedResult) {
+async function onScanSuccess(decodedText, decodedResult) {
     const found = masterBarang.find(item => {
         let kode = '', nama = '';
         if (Array.isArray(item)) {
@@ -622,11 +929,28 @@ function onScanSuccess(decodedText, decodedResult) {
         let pic = Array.isArray(found) ? found[2] : (found.pic || found.penanggung_jawab || '');
         
         pilihBarang(kode, nama, pic);
+        await showCustomModal({
+            title: "Scan Berhasil",
+            message: `Berhasil memilih barang: ${nama}`,
+            type: "success"
+        });
     } else {
         document.getElementById('poKode').value = decodedText;
         document.getElementById('triggerModal').textContent = decodedText;
         stopCameraScanner();
         checkFormValidity();
+        await showCustomModal({
+            title: "Kode Ditemukan",
+            message: `Kode terdeteksi: ${decodedText} (Dimasukkan manual)`,
+            type: "info"
+        });
+
+        setTimeout(() => {
+            const submitBtn = document.querySelector('#poSection button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 150);
     }
 }
 
@@ -637,14 +961,23 @@ async function submitPO(e) {
     const btn = document.getElementById('btnSubmit');
     const msg = document.getElementById('poMessage');
 
+    const isEditMode = (currentEditRowIndex !== null);
+    const actionType = isEditMode ? 'updatePO' : 'submitPO';
+
     if (btn) {
         btn.disabled = true;
         btn.style.opacity = "0.7";
-        btn.innerHTML = `<span class="modern-spinner"></span>Mengirim...`;
+        btn.innerHTML = `<span class="modern-spinner"></span>${isEditMode ? 'Memperbarui...' : 'Mengirim...'}`;
+    }
+
+    if (msg) {
+        msg.style.color = "#38bdf8";
+        msg.innerText = isEditMode ? "Memperbarui data di kedua sheet..." : "Mengirim data PO ke Google Sheets...";
     }
 
     const dataPO = {
-        action: 'submitPO',
+        action: actionType,
+        rowIndex: currentEditRowIndex,
         tanggal: document.getElementById('poTanggal') ? document.getElementById('poTanggal').value : '',
         kodeBarang: document.getElementById('poKode') ? document.getElementById('poKode').value : '',
         namaBarang: document.getElementById('poNama') ? document.getElementById('poNama').value : '',
@@ -660,28 +993,59 @@ async function submitPO(e) {
         const result = await response.json();
 
         if (result.status === 'success') {
+            if (btn) {
+                btn.innerHTML = `✨ Berhasil!`;
+                btn.style.backgroundColor = "#10b981";
+            }
+            
             if (msg) {
                 msg.style.color = "#10b981";
-                msg.innerText = "Data PO Berhasil Disimpan!";
+                msg.innerText = isEditMode ? "Data PO Berhasil Diperbarui di Kedua Sheet!" : "Data PO Berhasil Disimpan!";
             }
-            document.getElementById('poForm')?.reset();
+
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            if (document.getElementById('poForm')) document.getElementById('poForm').reset();
+            currentEditRowIndex = null;
+
             if (document.getElementById('poTanggal')) document.getElementById('poTanggal').value = getLocalDateString();
+            if (document.getElementById('poKode')) document.getElementById('poKode').value = '';
+            if (document.getElementById('poNama')) document.getElementById('poNama').value = '';
+            if (document.getElementById('poPic')) document.getElementById('poPic').value = '';
             if (document.getElementById('triggerModal')) document.getElementById('triggerModal').textContent = "-- Pilih Barang dari Master --";
+            
+            if (btn) {
+                btn.innerHTML = "Kirim";
+                btn.style.background = ""; 
+            }
+
         } else {
-            showCustomModal({ title: "Gagal", message: result.message, type: "error" });
+            await showCustomModal({
+                title: "Gagal",
+                message: "Gagal: " + result.message,
+                type: "error"
+            });
+            if (btn) {
+                btn.innerHTML = isEditMode ? "💾 Update Data PO" : "Kirim";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
         }
+
+        setTimeout(() => { if (msg) msg.innerText = ""; }, 3000);
+
     } catch (err) {
-        console.error(err);
+        console.error("Gagal mengirim:", err);
         if (msg) {
             msg.style.color = "#ef4444";
             msg.innerText = "Terjadi kendala koneksi internet!";
         }
-    } finally {
         if (btn) {
+            btn.innerHTML = isEditMode ? "💾 Update Data PO" : "Kirim";
             btn.disabled = false;
-            btn.innerHTML = "Kirim";
             btn.style.opacity = "1";
         }
+    } finally {
         checkFormValidity();
     }
 }
@@ -719,9 +1083,11 @@ function initRobotAnimation() {
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('password');
     const eyeIconToggle = document.getElementById('eyeIconToggle');
+    
     if (!passwordInput || !eyeIconToggle) return;
 
     const isPassword = passwordInput.getAttribute('type') === 'password';
+    
     if (isPassword) {
         passwordInput.setAttribute('type', 'text');
         eyeIconToggle.className = "fa-solid fa-eye";
@@ -743,19 +1109,212 @@ function tambahJumlah(angka) {
     checkFormValidity();
 }
 
+function triggerGoogleLogin() {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                showCustomModal({
+                    title: "Google Login",
+                    message: "Silakan pastikan browser mengizinkan pop-up untuk melanjutkan login Google.",
+                    type: "warning"
+                });
+            }
+        });
+    } else {
+        showCustomModal({
+            title: "Google Login",
+            message: "Google API belum dimuat sepenuhnya. Pastikan terhubung ke internet.",
+            type: "warning"
+        });
+    }
+}
+
 function initRealTimeWeather() {
     const tempEl = document.getElementById('weatherTemp');
-    if (tempEl) tempEl.textContent = "30°C";
+    const condEl = document.getElementById('weatherCondition');
+    const locEl = document.getElementById('weatherLocation'); 
+    const iconEl = document.getElementById('weatherIconContainer');
+
+    if (!tempEl) return;
+
+    const fetchWeatherByGPS = () => {
+        if (!navigator.geolocation) {
+            fetchDefaultWeather(-7.275, 112.793);
+            return;
+        }
+
+        if(locEl) locEl.textContent = "Menemukan lokasi...";
+        if(condEl) condEl.textContent = "Memuat Cuaca...";
+
+        let gpsResolved = false;
+
+        const fallbackTimer = setTimeout(() => {
+            if (!gpsResolved) {
+                fetchDefaultWeather(-7.275, 112.793);
+            }
+        }, 4000);
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                gpsResolved = true;
+                clearTimeout(fallbackTimer);
+                
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                try {
+                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
+                    const geoData = await geoRes.json();
+                    
+                    const address = geoData.address || {};
+                    const wilayah = address.village || address.suburb || address.city_district || address.city || "Lokasi Anda";
+                    if(locEl) locEl.textContent = wilayah;
+
+                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+                    const weatherData = await weatherRes.json();
+
+                    const temp = Math.round(weatherData.current.temperature_2m);
+                    const wCode = weatherData.current.weather_code;
+
+                    if(tempEl) tempEl.textContent = `${temp}°C`;
+                    
+                    const weatherInfo = getWeatherDescription(wCode);
+                    if(condEl) condEl.textContent = weatherInfo.text;
+                    if(iconEl) iconEl.innerHTML = `<i class="${weatherInfo.icon}"></i>`;
+
+                } catch (err) {
+                    console.error("Gagal mengambil data cuaca:", err);
+                    fetchDefaultWeather(lat, lon);
+                }
+            }, 
+            (error) => {
+                gpsResolved = true;
+                clearTimeout(fallbackTimer);
+                fetchDefaultWeather(-7.275, 112.793);
+            }, 
+            { 
+                enableHighAccuracy: false, 
+                timeout: 3500, 
+                maximumAge: 60000 
+            }
+        );
+    };
+
+    const triggerPermissionOnTouch = () => {
+        fetchWeatherByGPS();
+        window.removeEventListener('click', triggerPermissionOnTouch);
+        window.removeEventListener('touchstart', triggerPermissionOnTouch);
+    };
+
+    window.addEventListener('click', triggerPermissionOnTouch, { once: true });
+    window.addEventListener('touchstart', triggerPermissionOnTouch, { once: true });
+}
+
+async function fetchDefaultWeather(lat, lon) {
+    try {
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+        const weatherData = await weatherRes.json();
+        
+        const tempEl = document.getElementById('weatherTemp');
+        const condEl = document.getElementById('weatherCondition');
+        const locEl = document.getElementById('weatherLocation');
+        const iconEl = document.getElementById('weatherIconContainer');
+
+        if(tempEl) tempEl.textContent = `${Math.round(weatherData.current.temperature_2m)}°C`;
+        const info = getWeatherDescription(weatherData.current.weather_code);
+        if(condEl) condEl.textContent = info.text;
+        if(iconEl) iconEl.innerHTML = `<i class="${info.icon}"></i>`;
+        if(locEl) locEl.textContent = "Mulyorejo, Surabaya";
+    } catch(e) {
+        const condEl = document.getElementById('weatherCondition');
+        if(condEl) condEl.textContent = "Cerah Berawan";
+    }
+}
+
+function getWeatherDescription(code) {
+    if (code === 0) return { text: "Cerah", icon: "fa-solid fa-sun" };
+    if (code >= 1 && code <= 3) return { text: "Berawan", icon: "fa-solid fa-cloud-sun" };
+    if (code >= 45 && code <= 48) return { text: "Berkabut", icon: "fa-solid fa-smog" };
+    if (code >= 51 && code <= 67) return { text: "Gerimis / Hujan Ringan", icon: "fa-solid fa-cloud-rain" };
+    if (code >= 71 && code <= 77) return { text: "Salju", icon: "fa-solid fa-snowflake" };
+    if (code >= 80 && code <= 82) return { text: "Hujan Lebat", icon: "fa-solid fa-cloud-showers-heavy" };
+    if (code >= 95 && code <= 99) return { text: "Badai Petir", icon: "fa-solid fa-cloud-bolt" };
+    return { text: "Berawan", icon: "fa-solid fa-cloud" };
+}
+
+// =========================================================================
+// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS (H-1)
+// =========================================================================
+
+async function cekRekapOtomatis() {
+  const namaPicLogin = localStorage.getItem('po_user') || "";
+  if (!namaPicLogin) return;
+
+  try {
+    const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}`);
+    const hasil = await response.json();
+    
+    if (hasil.status === "success") {
+      const kunciHariIni = `notif_rekap_${hasil.tanggal}_${namaPicLogin}`;
+      const sudahMuncul = localStorage.getItem(kunciHariIni);
+
+      if (!sudahMuncul) {
+        let pesanNotifikasi = "";
+        
+        if (hasil.totalPO > 0) {
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
+        } else {
+          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: belum ada catatan PO atas namamu hari ini.`;
+        }
+        
+        await showCustomModal({
+            title: "📊 Rekap Gudang Harian",
+            message: pesanNotifikasi,
+            type: "success"
+        });
+
+        if (Notification.permission === "granted") {
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification("📦 Rekap Gudang Nuhsantara", {
+                        body: pesanNotifikasi,
+                        icon: "Favicon/Logo.png",
+                        badge: "Favicon/Logo.png",
+                        vibrate: [200, 100, 200]
+                    });
+                }).catch(function(err) {
+                    new Notification("📦 Rekap Gudang Nuhsantara", {
+                        body: pesanNotifikasi,
+                        icon: "Favicon/Logo.png"
+                    });
+                });
+            } else {
+                new Notification("📦 Rekap Gudang Nuhsantara", {
+                    body: pesanNotifikasi,
+                    icon: "Favicon/Logo.png"
+                });
+            }
+        }
+        
+        localStorage.setItem(kunciHariIni, "true");
+      }
+    }
+  } catch (err) {
+    console.error("Gagal memuat rekap otomatis PIC:", err);
+  }
 }
 
 // ==========================================
-// 🔔 REGISTRASI FCM TOKEN & NOTIFIKASI
+// 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
 // ==========================================
+
 async function registerFCMTokenToServer(tokenValue) {
+    // Ambil nama user yang sedang aktif login, jika kosong jangan asal isi "Operator Gudang"
     const currentUser = localStorage.getItem('po_user');
     
+    // Kalau belum login atau namanya kosong, batalkan pengiriman token atau tandai sebagai "Guest"
     if (!tokenValue || !currentUser) {
-        console.log("Token atau user belum siap.");
+        console.log("Token atau user belum siap, pendaftaran FCM ditunda.");
         return;
     }
 
@@ -764,26 +1323,25 @@ async function registerFCMTokenToServer(tokenValue) {
             method: 'POST',
             body: JSON.stringify({
                 action: 'saveFCMToken',
-                user: currentUser,
+                user: currentUser, // Sekarang dijamin isinya nama asli user!
                 token: tokenValue
             })
         });
-        console.log("FCM Token berhasil terdaftar atas nama:", currentUser);
+        console.log("Token perangkat berhasil didaftarkan ke server atas nama:", currentUser);
     } catch (err) {
-        console.error("Gagal daftar FCM:", err);
+        console.error("Gagal mendaftarkan token FCM:", err);
     }
 }
 
+
 function checkAndForceNotification() {
-    if (!("Notification" in window)) return;
-    
+    if (!("Notification" in window)) {
+        console.log("Browser ini tidak mendukung sistem notifikasi.");
+        return;
+    }
+
     if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
-        let deviceToken = localStorage.getItem("gudang_device_token");
-        if (!deviceToken) {
-            deviceToken = "token_" + Math.random().toString(36).substring(2) + "_" + Date.now();
-            localStorage.setItem("gudang_device_token", deviceToken);
-        }
-        registerFCMTokenToServer(deviceToken);
+        console.log("Izin notifikasi sudah aktif sebelumnya.");
         return;
     }
 
@@ -792,6 +1350,7 @@ function checkAndForceNotification() {
 
 function showForceNotificationModal() {
     let modal = document.getElementById('forceNotificationModal');
+    
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'forceNotificationModal';
@@ -802,7 +1361,7 @@ function showForceNotificationModal() {
             backdrop-filter: blur(8px);
         `;
         modal.innerHTML = `
-            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+            <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(56, 189, 248, 0.3); padding: 30px 25px; border-radius: 20px; max-width: 380px; width: 100%; text-align: center; color: #fff; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
                 <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 26px; color: #38bdf8;">
                     <i class="fa-solid fa-bell"></i>
                 </div>
@@ -813,7 +1372,7 @@ function showForceNotificationModal() {
                 <button id="btnAllowNotif" style="
                     background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 20px;
                     border-radius: 12px; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transition: transform 0.1s;
                 ">
                     Izinkan Notifikasi Sekarang
                 </button>
@@ -844,7 +1403,11 @@ function showForceNotificationModal() {
                     icon: "Favicon/Logo.png"
                 });
             } else {
-                modal.style.display = 'none';
+                await showCustomModal({
+                    title: "Izin Ditolak",
+                    message: "Aplikasi memerlukan izin notifikasi agar dapat digunakan oleh tim gudang!",
+                    type: "error"
+                });
             }
         } catch (error) {
             console.error("Gagal meminta izin notifikasi:", error);
@@ -852,6 +1415,19 @@ function showForceNotificationModal() {
     };
 }
 
-setTimeout(() => {
-    checkAndForceNotification();
-}, 2000);
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkAndForceNotification, 1500);
+});
+
+// Pendaftaran Service Worker untuk PWA & Push Notification
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./firebase-messaging-sw.js')
+            .then((registration) => {
+                console.log('Service Worker berhasil didaftarkan dengan scope: ', registration.scope);
+            })
+            .catch((err) => {
+                console.log('Gagal mendaftarkan Service Worker: ', err);
+            });
+    });
+}
