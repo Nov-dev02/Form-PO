@@ -1,5 +1,5 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPE82yBEktcrtxrbNS2nAwQCVGVYTVnQu-DJR3ZqicXRA2q0DUJ6FPfOhNNC6rJA5YZw/exec";
-const CURRENT_APP_VERSION = "v1.2.0"; // 🚀 Update versi terbaru
+const CURRENT_APP_VERSION = "v1.2.1"; // 🚀 Update versi perbaikan
 
 let masterBarang = [];
 let html5QrCode = null;
@@ -248,6 +248,7 @@ function tampilkanFormPO(username) {
     setTimeout(checkAndForceNotification, 1500);
 }
 
+// 🟢 PERBAIKAN: Tombol Login tidak lagi nyangkut (infinite loading)
 async function handleLogin() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -262,29 +263,60 @@ async function handleLogin() {
         return;
     }
 
+    if (errDiv) errDiv.innerText = "";
+    if (btnLogin) {
+        btnLogin.disabled = true;
+        btnLogin.style.opacity = "0.7";
+        btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`;
+    }
+
     try {
-        if (btnLogin) { btnLogin.disabled = true; btnLogin.innerHTML = `<span class="modern-spinner"></span>Memproses...`; }
-        
         const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', username: user, password: pass })
         });
         const result = await response.json();
 
+        // Kembalikan tombol ke kondisi normal sebelum pindah halaman
+        if (btnLogin) {
+            btnLogin.innerHTML = "Login";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
+        }
+
         if (result.status === 'success') {
             const today = getLocalDateString();
             localStorage.setItem('po_user', user);
             localStorage.setItem('po_login_date', today);
+            if (errDiv) errDiv.innerText = "";
             tampilkanFormPO(user);
         } else {
-            if (btnLogin) { btnLogin.innerHTML = "Login"; btnLogin.disabled = false; }
-            if (errDiv) { errDiv.style.color = "#ef4444"; errDiv.innerText = result.message || "Username atau password salah!"; }
+            if (errDiv) {
+                errDiv.style.color = "#ef4444";
+                errDiv.innerText = result.message || "Username atau password salah!";
+            }
         }
     } catch (err) {
-        if (btnLogin) { btnLogin.innerHTML = "Login"; btnLogin.disabled = false; }
-        if (errDiv) { errDiv.style.color = "#ef4444"; errDiv.innerText = "Gagal terhubung ke server!"; }
+        if (btnLogin) {
+            btnLogin.innerHTML = "Login";
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = "1";
+        }
+        if (errDiv) {
+            errDiv.style.color = "#ef4444";
+            errDiv.innerText = "Gagal terhubung ke server!";
+        }
         console.error(err);
     }
+}
+
+// 🟢 PERBAIKAN: Handler untuk tombol Google Login agar memberikan respon
+function triggerGoogleLogin() {
+    showCustomModal({
+        title: "Google Login",
+        message: "Silakan gunakan login username & password internal gudang terlebih dahulu.",
+        type: "info"
+    });
 }
 
 async function loadMasterBarang() {
@@ -720,7 +752,6 @@ function initRealTimeWeather() {
 // 🔔 REGISTRASI FCM TOKEN & NOTIFIKASI
 // ==========================================
 async function registerFCMTokenToServer(tokenValue) {
-    // Ambil nama user yang sedang login saat itu
     const currentUser = localStorage.getItem('po_user');
     
     if (!tokenValue || !currentUser) {
@@ -733,7 +764,7 @@ async function registerFCMTokenToServer(tokenValue) {
             method: 'POST',
             body: JSON.stringify({
                 action: 'saveFCMToken',
-                user: currentUser, // Kirim nama user asli yang login, BUKAN kosong atau "Operator Gudang"
+                user: currentUser,
                 token: tokenValue
             })
         });
@@ -746,7 +777,6 @@ async function registerFCMTokenToServer(tokenValue) {
 function checkAndForceNotification() {
     if (!("Notification" in window)) return;
     
-    // Kalau sudah diizinkan sebelumnya, pastikan token tetap terkirim dengan user yang aktif
     if (Notification.permission === "granted" || localStorage.getItem("gudang_notif_allowed") === "true") {
         let deviceToken = localStorage.getItem("gudang_device_token");
         if (!deviceToken) {
@@ -807,7 +837,6 @@ function showForceNotificationModal() {
                     localStorage.setItem("gudang_device_token", deviceToken);
                 }
                 
-                // Kirim token beserta nama user yang sedang login
                 registerFCMTokenToServer(deviceToken);
 
                 new Notification("Sistem PO Gudang 📦", {
@@ -816,7 +845,6 @@ function showForceNotificationModal() {
                 });
             } else {
                 modal.style.display = 'none';
-                console.log("Izin notifikasi ditolak user.");
             }
         } catch (error) {
             console.error("Gagal meminta izin notifikasi:", error);
@@ -824,7 +852,6 @@ function showForceNotificationModal() {
     };
 }
 
-// Pastikan fungsi pengecekan dipanggil otomatis saat halaman form PO terbuka setelah login
 setTimeout(() => {
     checkAndForceNotification();
 }, 2000);
