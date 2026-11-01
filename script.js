@@ -1416,3 +1416,6 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+window.addEventListener('DOMContentLoaded', () => {
+    cekRekapOtomatis();
+});
