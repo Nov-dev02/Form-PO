@@ -1239,27 +1239,33 @@ function getWeatherDescription(code) {
 }
 
 // =========================================================================
-// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS
+// 🔔 CEK REKAP & NOTIFIKASI PIC OTOMATIS (REKAP KEMARIN - PAGI HARI)
 // =========================================================================
 async function cekRekapOtomatis() {
   const namaPicLogin = localStorage.getItem('po_user') || "";
   if (!namaPicLogin) return;
 
   try {
-    const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}`);
+    // Mengambil tanggal kemarin secara otomatis (format YYYY-MM-DD)
+    const kemarin = new Date();
+    kemarin.setDate(kemarin.getDate() - 1);
+    const tanggalKemarin = kemarin.toISOString().split('T')[0];
+
+    const response = await fetch(`${WEB_APP_URL}?action=getRekap&pic=${encodeURIComponent(namaPicLogin)}&tanggal=${tanggalKemarin}`);
     const hasil = await response.json();
     
     if (hasil.status === "success") {
-      const kunciHariIni = `notif_rekap_${hasil.tanggal}_${namaPicLogin}`;
-      const sudahMuncul = localStorage.getItem(kunciHariIni);
+      // Menggunakan kunci berdasarkan tanggal kemarin agar tidak bentrok
+      const kunciKemarin = `notif_rekap_${tanggalKemarin}_${namaPicLogin}`;
+      const sudahMuncul = localStorage.getItem(kunciKemarin);
 
       if (!sudahMuncul) {
         let pesanNotifikasi = "";
         
         if (hasil.totalPO > 0) {
-          pesanNotifikasi = `Hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
+          pesanNotifikasi = `Kemarin kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
         } else {
-          pesanNotifikasi = `Belum ada catatan PO atas namamu hari ini.`;
+          pesanNotifikasi = `Belum ada catatan PO atas namamu kemarin.`;
         }
         
         // 🟢 Memicu Banner Notifikasi Sistem HP Asli di Atas Layar
@@ -1283,14 +1289,13 @@ async function cekRekapOtomatis() {
             }
         }
         
-        localStorage.setItem(kunciHariIni, "true");
+        localStorage.setItem(kunciKemarin, "true");
       }
     }
   } catch (err) {
     console.error("Gagal memuat rekap otomatis PIC:", err);
   }
 }
-
 // ==========================================
 // 🔔 MODAL PAKSA IZIN NOTIFIKASI & REGISTRASI FCM TOKEN
 // ==========================================
