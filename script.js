@@ -1257,34 +1257,26 @@ async function cekRekapOtomatis() {
         let pesanNotifikasi = "";
         
         if (hasil.totalPO > 0) {
-          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
+          pesanNotifikasi = `Hari ini kamu berhasil melakukan ${hasil.totalPO} kali input PO! Kerja bagus! 📦✨`;
         } else {
-          pesanNotifikasi = `Halo ${namaPicLogin}, rekap tutup gudang: belum ada catatan PO atas namamu hari ini.`;
+          pesanNotifikasi = `Belum ada catatan PO atas namamu hari ini.`;
         }
         
-        await showCustomModal({
-            title: "📊 Rekap Gudang Harian",
-            message: pesanNotifikasi,
-            type: "success"
-        });
-
+        // 🟢 Memicu Banner Notifikasi Sistem HP Asli di Atas Layar
         if (Notification.permission === "granted") {
+            const judulNotif = "📦 Rekap Gudang Nuhsantara";
+            
             if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.ready.then(function(registration) {
-                    registration.showNotification("📦 Rekap Gudang Nuhsantara", {
-                        body: pesanNotifikasi,
-                        icon: "Favicon/Logo.png",
-                        badge: "Favicon/Logo.png",
-                        vibrate: [200, 100, 200]
-                    });
-                }).catch(function(err) {
-                    new Notification("📦 Rekap Gudang Nuhsantara", {
-                        body: pesanNotifikasi,
-                        icon: "Favicon/Logo.png"
-                    });
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification(judulNotif, {
+                    body: pesanNotifikasi,
+                    icon: "Favicon/Logo.png",
+                    badge: "Favicon/Logo.png",
+                    vibrate: [200, 100, 200],
+                    tag: "rekap-harian"
                 });
             } else {
-                new Notification("📦 Rekap Gudang Nuhsantara", {
+                new Notification(judulNotif, {
                     body: pesanNotifikasi,
                     icon: "Favicon/Logo.png"
                 });
