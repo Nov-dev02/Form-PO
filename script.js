@@ -324,6 +324,7 @@ function tampilkanFormPO(username) {
     
     setDynamicGreeting(username);
     loadMasterBarang();
+    cekRekapOtomatis();
     
     // Panggil pengecekan/pendaftaran FCM token otomatis berdasarkan user yang login
     setTimeout(checkAndForceNotification, 1500);
