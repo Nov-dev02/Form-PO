@@ -1270,7 +1270,7 @@ async function cekRekapOtomatis() {
         
         // 🟢 Memicu Banner Notifikasi Sistem HP Asli di Atas Layar
         if (Notification.permission === "granted") {
-            const judulNotif = "📦 Rekap Gudang Nuhsantara";
+            const judulNotif = "Rekap Gudang Nuhsantara";
             
             if ("serviceWorker" in navigator) {
                 const registration = await navigator.serviceWorker.ready;
