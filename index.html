@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem PO Gudang - Gudang Nuhsantara</title>
+    <title>Sistem PO Gudang</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="Favicon/Logo.png">
     <!-- Font Awesome CDN untuk seluruh ikon -->
@@ -13,11 +13,29 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <!-- 🛡️ SATPAM CLOUD GUARD PUSAT (Gudang Nuhsantara) -->
-    <script src="../nx-guard.js"></script>
 </head>
 <body>
+
+    <!-- ========================================== -->
+    <!-- 🚨 POP-UP BLOKIR & PERINGATAN MIGRASI SISTEM -->
+    <!-- ========================================== -->
+    <div id="migrationBlockModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(7, 11, 20, 0.98); backdrop-filter: blur(14px); z-index: 2147483647; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; font-family: monospace;">
+        <div style="background: #0f172a; border: 2px solid #ef4444; padding: 32px 24px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(239, 68, 68, 0.3);">
+            <div style="font-size: 42px; margin-bottom: 12px;">🚨</div>
+            <h3 style="color: #ef4444; margin: 0 0 8px 0; font-size: 16px; font-weight: bold; letter-spacing: 0.5px;">APLIKASI PINDAH EKOSISTEM</h3>
+            <div style="font-size: 10.5px; color: #f87171; margin-bottom: 14px; background: rgba(239, 68, 68, 0.1); padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3);">MIGRASI_REPO_V2 [STATUS: DEPRECATED]</div>
+            <p style="color: #cbd5e1; font-size: 12.5px; line-height: 1.6; margin-bottom: 24px; text-align: left;">
+                Sistem PO Gudang versi mandiri ini telah resmi ditutup dan dipindahkan ke <b>Gudang Nuhsantara Ecosystem</b> demi keamanan terpusat.<br><br>
+                Harap <b>uninstall (hapus)</b> aplikasi lama ini dari perangkat Anda, lalu segera hubungi Pengembang (Novan) untuk meminta link akses aplikasi terbaru.
+            </p>
+            <a href="https://wa.me/6287762756779?text=Halo%20Novan,%20aplikasi%20PO%20lama%20saya%20sudah%20tidak%20bisa%20dibuka.%20Mohon%20bantuan%20link%20akses%20terbaru%20ekosistem%20Gudang%20Nuhsantara." target="_blank" style="text-decoration: none; display: block;">
+                <button type="button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: 1px solid #22c55e; padding: 12px; font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-family: monospace; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);">
+                    💬 MINTA LINK KE NOVAN (WA)
+                </button>
+            </a>
+            <div style="font-size: 9.5px; color: #64748b; margin-top: 14px;">Gudang Nuhsantara Security Hub</div>
+        </div>
+    </div>
 
     <!-- Splash Screen / Initial Loading ala Aplikasi Native -->
     <div id="appSplashScreen" class="splash-screen">
@@ -35,19 +53,6 @@
         <!-- Login Section -->
         <div id="loginSection" class="login-box hidden">
             
-            <!-- Banner Migrasi / Pemberitahuan Uninstall Aplikasi Lama -->
-            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); padding: 12px 14px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-family: monospace;">
-                <div style="display: flex; align-items: center; gap: 8px; color: #ef4444; font-weight: bold; font-size: 12px; margin-bottom: 4px;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> PERHATIAN PENGGUNA
-                </div>
-                <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
-                    Versi aplikasi mandiri (standalone) telah dihentikan. Harap <b>uninstall</b> aplikasi lama dari HP Anda, lalu minta link ekosistem terbaru langsung ke Pengembang (Novan).
-                </div>
-                <a href="https://wa.me/6287762756779?text=Halo%20Novan,%20saya%20ingin%20meminta%20link%20akses%20terbaru%20ekosistem%20Gudang%20Nuhsantara." target="_blank" style="display: inline-block; margin-top: 8px; background: #16a34a; color: #fff; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 10.5px; font-weight: bold;">
-                    <i class="fab fa-whatsapp"></i> Minta Link ke Developer
-                </a>
-            </div>
-
             <!-- Robot & Speech Bubble Container dengan Robot Tangan Menutup Mata -->
             <div class="robot-container" id="robotContainer">
                 <div class="robot-bubble" id="robotBubble">Masukkan akun internal gudang</div>
@@ -310,7 +315,7 @@
 
             <!-- Buttons Container -->
             <div id="modalButtonsContainer" style="display: flex; gap: 10px;">
-                <button type="button" id="modalBtnCancel" style="display: none; flex: 1; padding: 10px; background: #334155; border: none; color: #cbd5e1; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 13px; transition: background 0.2s;">Batal</button>
+                <button type="button" id="modalBtnCancel" style="display: none; flex: 1; padding: 10px; background: #334155; border: none; color: #cbd5e1; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 13px; transition: background 0.2s;">Batal</>
                 <button type="button" id="modalBtnConfirm" style="flex: 1; padding: 10px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; color: #ffffff; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); transition: transform 0.1s;">OK</button>
             </div>
 
