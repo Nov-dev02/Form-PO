@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem PO Gudang</title>
+    <title>Sistem PO Gudang - Gudang Nuhsantara</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="Favicon/Logo.png">
     <!-- Font Awesome CDN untuk seluruh ikon -->
@@ -13,6 +13,9 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- 🛡️ SATPAM CLOUD GUARD PUSAT (Gudang Nuhsantara) -->
+    <script src="../nx-guard.js"></script>
 </head>
 <body>
 
@@ -32,6 +35,19 @@
         <!-- Login Section -->
         <div id="loginSection" class="login-box hidden">
             
+            <!-- Banner Migrasi / Pemberitahuan Uninstall Aplikasi Lama -->
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); padding: 12px 14px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-family: monospace;">
+                <div style="display: flex; align-items: center; gap: 8px; color: #ef4444; font-weight: bold; font-size: 12px; margin-bottom: 4px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> PERHATIAN PENGGUNA
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
+                    Versi aplikasi mandiri (standalone) telah dihentikan. Harap <b>uninstall</b> aplikasi lama dari HP Anda, lalu minta link ekosistem terbaru langsung ke Pengembang (Novan).
+                </div>
+                <a href="https://wa.me/6287762756779?text=Halo%20Novan,%20saya%20ingin%20meminta%20link%20akses%20terbaru%20ekosistem%20Gudang%20Nuhsantara." target="_blank" style="display: inline-block; margin-top: 8px; background: #16a34a; color: #fff; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 10.5px; font-weight: bold;">
+                    <i class="fab fa-whatsapp"></i> Minta Link ke Developer
+                </a>
+            </div>
+
             <!-- Robot & Speech Bubble Container dengan Robot Tangan Menutup Mata -->
             <div class="robot-container" id="robotContainer">
                 <div class="robot-bubble" id="robotBubble">Masukkan akun internal gudang</div>
